@@ -16,8 +16,24 @@ const char* displayedSupportedInputContainers[] = {
 };
 
 const char* displayedSupportOutputContainers[] = {
-    "png", "webp"
+    "png (fast, low compression)",
+    "webp (slow, high compression)"
 };
+
+#ifndef WIN32
+#define fopen_s(a,b,c) *(a) = fopen(b,c)
+#define _strcmpi strcasecmp
+
+#include <sys/time.h>
+long long timeInMilliseconds(void) {
+    struct timeval tv;
+
+    gettimeofday(&tv,NULL);
+    return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
+}
+#else
+    // TODO
+#endif
 
 int main(const int argc, const char* argv[]) {
     if (argc < 3 || _strcmpi(argv[1], "-h") == 0 || _strcmpi(argv[1], "--help") == 0) {
@@ -81,12 +97,15 @@ int main(const int argc, const char* argv[]) {
     void* compressedTextureBuffer = NULL;
     struct TextureInformation textureInformation = {0};
 
+    uint64_t startTime = timeInMilliseconds();
+
     switch (textureContainer) {
-        case DDS:
+        case DDS: {
             struct DDS dds = ddsReadBuffer(buffer);
             textureInformation = dds.information;
             compressedTextureBuffer = dds.buffer;
             break;
+        }
         default: break;
     }
 
@@ -116,6 +135,9 @@ int main(const int argc, const char* argv[]) {
             break;
         default: break;
     }
+
+    uint64_t endTime = timeInMilliseconds();
+    printf("Decoding & re-encoding took %llu ms\n", endTime - startTime);
 
     free(outputBuffer);
     free(outputFileName);

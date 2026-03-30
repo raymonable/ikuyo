@@ -18,8 +18,8 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
     size_t blockSize = information.format >= (int)DXT1 ? 4 : 1;
     bool formatHasAlpha = !(information.format == RGB || information.format == BGR);
 
-    for (uint32_t y = 0; information.height > y; y += blockSize)
-        for (uint32_t x = 0; information.width > x; x += blockSize) {
+    for (uint32_t y = 0; information.height > (y + blockSize - 1); y += blockSize)
+        for (uint32_t x = 0; information.width > (x + blockSize - 1); x += blockSize) {
             uint8_t* dst = rgba + (y * information.width + x) * 4;
             switch (information.format) {
                 // Uncompressed formats
@@ -46,8 +46,7 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
                     bcdec_bc7(src, dst, information.width * 4); break;
                 default: break;
             }
-            int test = (information.format != DXT1 ? (blockSize * (formatHasAlpha ? 4 : 3)) : 8);
-            src = src + test;
+            src += (information.format != DXT1 ? (blockSize * (formatHasAlpha ? 4 : 3)) : 8);
         }
 
     if (information.requiresTransformation) {
