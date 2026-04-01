@@ -3,7 +3,7 @@
 //
 
 #include <ikuyo.h>
-#include <format/unity/assetbundle.h>
+#include <format/unityfs/assetbundle.h>
 #include <common/bytestream.h>
 
 #include <lz4.h> // NOTE: lz4hc appears to be included in here for decompression

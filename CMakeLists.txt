@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(ikuyo C CXX)
 
-set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
 include_directories(include external/bcdec)
 add_executable(ikuyo
@@ -11,7 +12,8 @@ add_executable(ikuyo
         src/common/image.c
 
         src/format/dds/dds.c
-        src/format/unity/assetbundle.c
+        src/format/unityfs/assetbundle.c
+        src/format/ue4/uexp.c
 )
 
 # Libwebp
