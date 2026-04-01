@@ -38,7 +38,7 @@ struct ImageBuffer webpGenerate(struct TextureInformation information, uint8_t* 
         for (size_t x = 0; information.width > x; x++) {
             size_t offset = y * information.width + x;
             const uint8_t* src = rgba + offset * 4;
-            picture.argb[offset] = (255 << 24) | (src[0] << 16) | (src[1] << 8) | src[2];
+            picture.argb[offset] = (src[3] << 24) | (src[0] << 16) | (src[1] << 8) | src[2];
         }
 
     WebPMemoryWriter memoryWriter = {0};

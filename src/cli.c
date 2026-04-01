@@ -7,6 +7,7 @@
 #include <common/texture.h>
 
 #include <format/dds/dds.h>
+#include <format/unity/assetbundle.h>
 
 #include <stdio.h>
 
@@ -67,6 +68,7 @@ int main(const int argc, const char* argv[]) {
 
     enum TextureContainer textureContainer = UnknownContainer;
     if (_strcmpi(inputFormatString, "dds") == 0) textureContainer = DDS;
+    if (_strcmpi(inputFormatString, "ab") == 0) textureContainer = UnityAssetBundle;
     if (textureContainer == UnknownContainer) {
         fprintf(stderr, "Unknown texture container format '%s'\n", inputFormatString);
         return 1;
@@ -108,6 +110,10 @@ int main(const int argc, const char* argv[]) {
             struct DDS dds = ddsReadBuffer(buffer);
             textureInformation = dds.information;
             compressedTextureBuffer = dds.buffer;
+            break;
+        }
+        case UnityAssetBundle: {
+            struct AssetBundle ab = assetBundleParse(buffer);
             break;
         }
         default: break;

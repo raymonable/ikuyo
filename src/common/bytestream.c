@@ -16,6 +16,20 @@ void bytestreamAlign(struct Bytestream* bytestream, int alignment) {
         bytestream->offset = bytestream->offset + (alignment - mod);
 }
 
+uint64_t bytestreamReadLongLong(struct Bytestream* bytestream, bool bigEndian) {
+    // TODO: determine host endianness
+    uint64_t value = *(uint64_t*)(bytestream->offset + bytestream->data);
+    bytestream->offset = bytestream->offset + sizeof(uint64_t);
+
+    if (bigEndian) {
+        uint32_t result = 0;
+        for (int i = 0; i < sizeof(uint64_t); i++)
+            result |= ((uint8_t*)(&value))[(sizeof(uint64_t) - 1) - i] << (8 * i);
+        return result;
+    }
+
+    return value;
+};
 uint32_t bytestreamReadLong(struct Bytestream* bytestream, bool bigEndian) {
     // TODO: determine host endianness
     uint32_t value = *(uint32_t*)(bytestream->offset + bytestream->data);
@@ -23,14 +37,14 @@ uint32_t bytestreamReadLong(struct Bytestream* bytestream, bool bigEndian) {
 
     if (bigEndian) {
         uint32_t result = 0;
-        for (int i = 0; i < sizeof(uint16_t); i++)
-            result |= ((uint8_t*)(&value))[(sizeof(uint16_t) - 1) - i] << (8 * i);
+        for (int i = 0; i < sizeof(uint32_t); i++)
+            result |= ((uint8_t*)(&value))[(sizeof(uint32_t) - 1) - i] << (8 * i);
         return result;
     }
 
     return value;
 };
-uint32_t bytestreamReadShort(struct Bytestream* bytestream, bool bigEndian) {
+uint16_t bytestreamReadShort(struct Bytestream* bytestream, bool bigEndian) {
     // TODO: determine host endianness
     uint16_t value = *(uint16_t*)(bytestream->offset + bytestream->data);
     bytestream->offset = bytestream->offset + sizeof(uint16_t);
@@ -55,7 +69,7 @@ char* bytestreamReadString(struct Bytestream* bytestream) {
 
     while (*end != 0)
         end++;
-    bytestream->offset += end - start;
+    bytestream->offset += (end - start) + 1;
 
     return start;
 };

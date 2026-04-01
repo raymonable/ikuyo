@@ -10,3 +10,9 @@
 [submodule "external/libwebp"]
 	path = external/libwebp
 	url = https://github.com/webmproject/libwebp
+[submodule "external/7zip"]
+	path = external/7zip
+	url = https://github.com/ip7z/7zip
+[submodule "external/lz4"]
+	path = external/lz4
+	url = https://github.com/lz4/lz4

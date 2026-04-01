@@ -19,7 +19,8 @@ enum TextureEncoding {
 
 enum TextureContainer {
     UnknownContainer = 0,
-    DDS
+    DDS,
+    UnityAssetBundle
 };
 
 struct TextureInformation {

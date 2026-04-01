@@ -8,12 +8,13 @@ add_executable(ikuyo
         src/cli.c
         src/common/bytestream.c
         src/common/texture.c
+        src/common/image.c
 
         src/format/dds/dds.c
-        src/common/image.c
+        src/format/unity/assetbundle.c
 )
 
-# Libraries
+# Libwebp
 
 set(WEBP_LINK_STATIC ON)
 set(WEBP_BUILD_ANIM_UTILS OFF)
@@ -28,6 +29,11 @@ set(WEBP_BUILD_EXTRAS OFF)
 
 add_subdirectory(external/libwebp)
 target_link_libraries(ikuyo PUBLIC webp)
+
+# LZ4
+
+add_subdirectory(external/lz4/build/cmake)
+target_link_libraries(ikuyo PUBLIC lz4)
 
 # Bridge
 

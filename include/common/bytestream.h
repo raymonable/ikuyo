@@ -15,9 +15,11 @@ struct Bytestream {
 struct Bytestream bytestreamInit(void* start);
 void bytestreamAlign(struct Bytestream*, int alignment);
 
+uint64_t bytestreamReadLongLong(struct Bytestream*, bool bigEndian);
 uint32_t bytestreamReadLong(struct Bytestream*, bool bigEndian);
-uint32_t bytestreamReadShort(struct Bytestream*, bool bigEndian);
+uint16_t bytestreamReadShort(struct Bytestream*, bool bigEndian);
 uint8_t bytestreamReadByte(struct Bytestream*);
+
 void* bytestreamReadPointer(struct Bytestream*);
 char* bytestreamReadString(struct Bytestream*);
 
