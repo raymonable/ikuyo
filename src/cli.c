@@ -32,7 +32,11 @@ long long timeInMilliseconds(void) {
     return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
 }
 #else
-    // TODO
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+long long timeInMilliseconds() {
+    return GetTickCount64();
+}
 #endif
 
 int main(const int argc, const char* argv[]) {
