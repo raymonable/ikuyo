@@ -16,7 +16,7 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
     uint8_t* src = buffer;
 
     size_t blockSize = information.format >= (int)DXT1 ? 4 : 1;
-    bool formatHasAlpha = !(information.format == RGB || information.format == BGR);
+    bool hasAlpha = textureHasAlpha(information);
 
     for (uint32_t y = 0; information.height > (y + blockSize - 1); y += blockSize)
         for (uint32_t x = 0; information.width > (x + blockSize - 1); x += blockSize) {
@@ -27,13 +27,13 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
                 case RGBA:
                     memcpy(dst, src, 3);
                     // NOTE: Always assume 100% opacity by default if alpha channel is unavailable
-                    dst[3] = formatHasAlpha ? src[3] : 255;
+                    dst[3] = hasAlpha ? src[3] : 255;
                     break;
                 case BGR:
                 case BGRA:
                     dst[0] = src[2]; dst[1] = src[1]; dst[2] = src[0];
                     // NOTE: Always assume 100% opacity by default if alpha channel is unavailable
-                    dst[3] = formatHasAlpha ? src[3] : 255;
+                    dst[3] = hasAlpha ? src[3] : 255;
                     break;
                 // Compressed formats
                 case DXT1:
@@ -46,7 +46,7 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
                     bcdec_bc7(src, dst, information.width * 4); break;
                 default: break;
             }
-            src += (information.format != DXT1 ? (blockSize * (formatHasAlpha ? 4 : 3)) : 8);
+            src += (information.format != DXT1 ? (blockSize * (hasAlpha ? 4 : 3)) : 8);
         }
 
     if (information.requiresTransformation) {
@@ -64,8 +64,9 @@ void* textureDecode(struct TextureInformation information, void* buffer) {
 
     return rgba;
 };
-
-
+bool textureHasAlpha(struct TextureInformation information) {
+    return !(information.format == RGB || information.format == BGR);
+}
 size_t textureGetSize(struct TextureInformation information) {
     return information.width * information.height * 4;
 };

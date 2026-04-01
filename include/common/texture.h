@@ -22,11 +22,6 @@ enum TextureContainer {
     DDS
 };
 
-enum ImageContainer {
-    NoContainer = 0,
-    PNG, WebP
-};
-
 struct TextureInformation {
     unsigned int width;
     unsigned int height;
@@ -39,6 +34,6 @@ struct TextureInformation {
 
 void* textureDecode(struct TextureInformation, void*);
 size_t textureGetSize(struct TextureInformation);
-void* textureWrap(struct TextureInformation, void*, enum ImageContainer);
+bool textureHasAlpha(struct TextureInformation);
 
 #endif //IKUYO_TEXTURE_H

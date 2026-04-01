@@ -3,7 +3,7 @@
 //
 
 #include <ikuyo.h>
-#include <bridge.h>
+#include <common/image.h>
 #include <common/texture.h>
 
 #include <format/dds/dds.h>
@@ -131,20 +131,30 @@ int main(const int argc, const char* argv[]) {
     memset(outputFileName, 0, strlen(inputFileName) + 8);
     memcpy(outputFileName, inputFileName, strlen(inputFileName));
 
-    // TODO: migrate to a centralized function for generating file buffers
+    struct ImageBuffer imageBuffer = {0};
+
     switch (imageFormat) {
-        case PNG:
-            memcpy(outputFileName + strlen(inputFileName), ".png", 4);
-            ikuyo_fpng_encode_image_to_file(outputFileName, outputBuffer, textureInformation.width, textureInformation.height, 4, 0);
-            break;
+        case PNG: memcpy(outputFileName + strlen(inputFileName), ".png", 4); break;
+        case WebP: memcpy(outputFileName + strlen(inputFileName), ".webp", 5); break;
         default: break;
     }
+    imageBuffer = imageGenerate(imageFormat, textureInformation, outputBuffer);
 
-    uint64_t endTime = timeInMilliseconds();
-    printf("Decoding & re-encoding took %llu ms\n", endTime - startTime);
+    if (imageBuffer.buffer != NULL) {
+        printf("Decoding & re-encoding took %llu ms\n", timeInMilliseconds() - startTime);
+
+        fopen_s(&file, outputFileName, "w");
+        fwrite(imageBuffer.buffer, imageBuffer.size, 1, file);
+        fclose(file);
+    } else {
+        fprintf(stderr, "Failed to encode image");
+        return 1;
+    }
 
     free(outputBuffer);
     free(outputFileName);
+
+    imageBufferFree(imageBuffer);
 
     return 0;
 }

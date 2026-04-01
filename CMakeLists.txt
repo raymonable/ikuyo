@@ -10,7 +10,24 @@ add_executable(ikuyo
         src/common/texture.c
 
         src/format/dds/dds.c
+        src/common/image.c
 )
+
+# Libraries
+
+set(WEBP_LINK_STATIC ON)
+set(WEBP_BUILD_ANIM_UTILS OFF)
+set(WEBP_BUILD_CWEBP OFF)
+set(WEBP_BUILD_DWEBP OFF)
+set(WEBP_BUILD_GIF2WEBP OFF)
+set(WEBP_BUILD_IMG2WEBP OFF)
+set(WEBP_BUILD_VWEBP OFF)
+set(WEBP_BUILD_WEBPINFO OFF)
+set(WEBP_BUILD_WEBPMUX OFF)
+set(WEBP_BUILD_EXTRAS OFF)
+
+add_subdirectory(external/libwebp)
+target_link_libraries(ikuyo PUBLIC webp)
 
 # Bridge
 

@@ -2,14 +2,25 @@
 // Created by Raymond on 3/29/2026.
 //
 
-#include <bridge.h>
-
-// Bridge: fpng
+// Bridge: `fpng`
 
 #include <fpng.h>
-void ikuyo_fpng_encode_image_to_file(const char* pFilename, const void* pImage, uint32_t w, uint32_t h, uint32_t num_chans, uint32_t flags) {
-    fpng::fpng_encode_image_to_file(
-        pFilename, pImage,
-        w, h, num_chans, flags
+extern "C" {
+    #include <common/image.h>
+}
+
+ImageBuffer pngGenerate(TextureInformation information, uint8_t* rgba) {
+    std::vector<uint8_t> buffer;
+    fpng::fpng_encode_image_to_memory(
+        rgba, information.width, information.height, 4,
+        buffer, 0
     );
+    ImageBuffer imageBuffer = {
+        .type = PNG,
+        .buffer = static_cast<uint8_t*>(malloc(buffer.size())),
+        .size = buffer.size(),
+    };
+    memcpy(imageBuffer.buffer, buffer.data(), buffer.size());
+    buffer.clear();
+    return imageBuffer;
 };
