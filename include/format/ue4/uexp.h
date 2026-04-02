@@ -13,6 +13,6 @@ struct UnrealEngineTexture {
     void* buffer;
 };
 
-struct UnrealEngineTexture uexpReadBuffer(void* buffer);
+struct UnrealEngineTexture uexpReadBuffer(void*, size_t);
 
 #endif //IKUYO_UEXP_H

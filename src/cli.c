@@ -115,7 +115,7 @@ int main(const int argc, const char* argv[]) {
             break;
         }
         case UE4: {
-            struct UnrealEngineTexture ue = uexpReadBuffer(buffer);
+            struct UnrealEngineTexture ue = uexpReadBuffer(buffer, fileSize);
             textureInformation = ue.information;
             compressedTextureBuffer = ue.buffer;
             break;

@@ -5,26 +5,21 @@
 #include <format/ue4/uexp.h>
 #include <common/bytestream.h>
 
-struct UnrealEngineTexture uexpReadBuffer(void* buffer) {
-    // TODO: make this more robust, it currently relies on very specific coincidental values
+struct UnrealEngineTexture uexpReadBuffer(void* buffer, size_t size) {
+    // TODO: make this more robust, it currently relies on very specific values
 
     struct TextureInformation information = {0};
     struct Bytestream bytestream = bytestreamInit(buffer);
 
-    bytestream.offset = 0x30;
+    while (strncmp(bytestreamReadPointer(&bytestream), "PF_", 3) != 0 && bytestream.offset < size) // TODO: find actual upper bound
+        bytestream.offset += 1;
+    if (bytestream.offset >= size)
+        return (struct UnrealEngineTexture){0};
 
+    bytestream.offset -= 0x11;
     information.width = bytestreamReadLong(&bytestream, true);
     information.height = bytestreamReadLong(&bytestream, true);
-
-    struct UnrealEngineTexture texture = {0};
-    texture.information = information;
-
-    // TODO: determine what the content between actually is instead of praying
-
-    while (strcmp(bytestreamReadPointer(&bytestream), "PF_") != 0 && bytestream.offset < 0x256) // TODO: find actual upper bound
-        bytestream.offset += 1;
-    if (bytestream.offset >= 0x256)
-        return (struct UnrealEngineTexture){0};
+    bytestream.offset += 0x9;
 
     const char* formatString = bytestreamReadString(&bytestream);
 
@@ -34,6 +29,8 @@ struct UnrealEngineTexture uexpReadBuffer(void* buffer) {
     if (strcmp(formatString, "PF_DXT3") == 0) information.format = DXT3;
     if (strcmp(formatString, "PF_DXT5") == 0) information.format = DXT5;
 
+    struct UnrealEngineTexture texture = {0};
+    texture.information = information;
     texture.buffer = (uint8_t*)bytestreamReadPointer(&bytestream) + 0x20;
     return texture;
 }
