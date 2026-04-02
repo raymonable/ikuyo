@@ -4,6 +4,8 @@ project(ikuyo C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
+
+
 include_directories(include external/bcdec)
 add_executable(ikuyo
         src/cli.c
@@ -45,5 +47,6 @@ add_library(ikuyo_bridge STATIC
 )
 set_target_properties(ikuyo_bridge PROPERTIES LANGUAGE CXX)
 target_include_directories(ikuyo_bridge PUBLIC include external/fpng/src)
+target_compile_definitions(ikuyo_bridge PUBLIC FPNG_NO_SSE)
 
 target_link_libraries(ikuyo PUBLIC ikuyo_bridge)

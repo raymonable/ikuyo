@@ -15,12 +15,7 @@ ImageBuffer pngGenerate(TextureInformation information, uint8_t* rgba) {
         rgba, information.width, information.height, 4,
         buffer, 0
     );
-    ImageBuffer imageBuffer = {
-        .type = PNG,
-        .buffer = static_cast<uint8_t*>(malloc(buffer.size())),
-        .size = buffer.size(),
-    };
-    memcpy(imageBuffer.buffer, buffer.data(), buffer.size());
+    ImageBuffer imageBuffer = imageBufferInit(PNG, buffer.data(), buffer.size());
     buffer.clear();
     return imageBuffer;
 };

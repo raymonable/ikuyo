@@ -157,7 +157,7 @@ int main(const int argc, const char* argv[]) {
     if (imageBuffer.buffer != NULL) {
         printf("Decoding & re-encoding took %llu ms\n", timeInMilliseconds() - startTime);
 
-        fopen_s(&file, outputFileName, "w");
+        fopen_s(&file, outputFileName, "wb");
         fwrite(imageBuffer.buffer, imageBuffer.size, 1, file);
         fclose(file);
     } else {

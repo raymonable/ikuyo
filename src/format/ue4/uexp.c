@@ -11,10 +11,15 @@ struct UnrealEngineTexture uexpReadBuffer(void* buffer, size_t size) {
     struct TextureInformation information = {0};
     struct Bytestream bytestream = bytestreamInit(buffer);
 
-    while (strncmp(bytestreamReadPointer(&bytestream), "PF_", 3) != 0 && bytestream.offset < size) // TODO: find actual upper bound
+    bytestream.offset = 0x10;
+    uint32_t magic = bytestreamReadLong(&bytestream, true);
+    if (magic != 0x8000000)
+        goto Ue4LoadFailure;
+
+    while (strncmp(bytestreamReadPointer(&bytestream), "PF_", 3) != 0 && bytestream.offset < size)
         bytestream.offset += 1;
     if (bytestream.offset >= size)
-        return (struct UnrealEngineTexture){0};
+        goto Ue4LoadFailure;
 
     bytestream.offset -= 0x11;
     information.width = bytestreamReadLong(&bytestream, true);
@@ -33,4 +38,7 @@ struct UnrealEngineTexture uexpReadBuffer(void* buffer, size_t size) {
     texture.information = information;
     texture.buffer = (uint8_t*)bytestreamReadPointer(&bytestream) + 0x20;
     return texture;
+
+Ue4LoadFailure:
+    return (struct UnrealEngineTexture){0};
 }
