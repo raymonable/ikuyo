@@ -18,7 +18,8 @@ struct AssetBundle {
     char* majorVersion;
     char* revisionVersion;
 
-
+    uint8_t* decompressedData;
+    size_t decompressedDataSize;
 };
 
 struct AssetBundle assetBundleParse(uint8_t* buffer);

@@ -59,12 +59,12 @@ uint16_t bytestreamReadShort(struct Bytestream* bytestream, bool bigEndian) {
     return value;
 };
 uint8_t bytestreamReadByte(struct Bytestream* bytestream) {
-    uint8_t value = *(unsigned char*)(bytestream->offset + bytestream->data);
+    uint8_t value = *(bytestream->offset + bytestream->data);
     bytestream->offset = bytestream->offset + sizeof(uint8_t);
     return value;
 };
 char* bytestreamReadString(struct Bytestream* bytestream) {
-    char* start = bytestream->data + bytestream->offset;
+    char* start = (char*)bytestream->data + bytestream->offset;
     char* end = start;
 
     while (*end != 0)

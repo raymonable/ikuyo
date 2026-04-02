@@ -8,24 +8,28 @@
 
 #include <lz4.h> // NOTE: lz4hc appears to be included in here for decompression
 
-void assetBundleDecompress(enum AssetBundleCompression type, uint8_t* input, size_t inputSize, uint8_t* output, size_t outputSize) {
+bool assetBundleDecompress(enum AssetBundleCompression type, uint8_t* input, size_t inputSize, uint8_t* output, size_t outputSize) {
     switch (type) {
         case AssetBundleNoCompression:
             memcpy(output, input, inputSize); break;
          // TODO: LZMA
         case AssetBundleLZ4HC:
         case AssetBundleLZ4:
-            LZ4_decompress_safe((char*)input, (char*)output, inputSize, outputSize);
-            break;
+            int result = LZ4_decompress_safe(
+                (char*)input, (char*)output,
+                inputSize, outputSize
+            );
+            return result > 0;
         default: break;
     }
+    return true;
 }
 
 struct AssetBundle assetBundleParse(uint8_t* buffer) {
     struct AssetBundle assetBundle = {0};
 
     if (strcmp((const char*)buffer, "UnityFS\0") != 0)
-        goto AssetBundleFailure;
+        goto AssetBundleLoadFailure;
 
     struct Bytestream bytestream = bytestreamInit(buffer + 8);
 
@@ -49,13 +53,47 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
 
     uint8_t* decompressedBlockInfo = malloc(decompressedBlockInfoSize);
     memset(decompressedBlockInfo, 0, decompressedBlockInfoSize);
-    assetBundleDecompress(
+    if (!assetBundleDecompress(
         flags & 0x3F,
         compressedBlockInfo, compressedBlockInfoSize,
         decompressedBlockInfo, decompressedBlockInfoSize
-    );
+    )) goto AssetBundleLoadFailure;
+
+    struct Bytestream blockInfoBytestream = bytestreamInit(decompressedBlockInfo);
+    blockInfoBytestream.offset += 16;
+
+    // BEGIN: decompress block contents
+    uint32_t blockInfoCount = bytestreamReadLong(&blockInfoBytestream, true);
+    for (size_t index = 0; index < blockInfoCount; index++) {
+        uint32_t blockDecompressedSize = bytestreamReadLong(&blockInfoBytestream, true);
+        uint32_t blockCompressedSize = bytestreamReadLong(&blockInfoBytestream, true);
+        uint32_t blockFlags = bytestreamReadShort(&blockInfoBytestream, true);
+
+        assetBundle.decompressedDataSize += blockDecompressedSize;
+        uint8_t* ptr = realloc(assetBundle.decompressedData, assetBundle.decompressedDataSize);
+        if (ptr != NULL) {
+            assetBundle.decompressedData = ptr;
+        } else
+            goto AssetBundleLoadFailure;
+
+        if (!assetBundleDecompress(
+            blockFlags & 0x3F,
+            bytestreamReadPointer(&bytestream), blockCompressedSize,
+            assetBundle.decompressedData + assetBundle.decompressedDataSize - blockDecompressedSize,
+            blockDecompressedSize
+        )) goto AssetBundleLoadFailure;
+        bytestream.offset += blockCompressedSize;
+    }
+
+    uint32_t blockNodeCount = bytestreamReadLong(&blockInfoBytestream, true);
+    for (size_t index = 0; index < blockNodeCount; index++) {
+        uint64_t nodeOffset = bytestreamReadLongLong(&blockInfoBytestream, true);
+        uint64_t nodeSize = bytestreamReadLongLong(&blockInfoBytestream, true);
+        uint32_t nodeFlags = bytestreamReadLong(&blockInfoBytestream, true);
+        const char* nodePath = bytestreamReadString(&blockInfoBytestream);
+    }
 
     return assetBundle;
-AssetBundleFailure:
+AssetBundleLoadFailure:
     return (struct AssetBundle){0};
 }

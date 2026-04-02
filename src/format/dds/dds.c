@@ -12,7 +12,7 @@ struct TextureInformation ddsReadBuffer(void* buffer) {
 
     uint32_t magic = bytestreamReadLong(&bytestream, false);
     if (magic != DDS_MAGIC)
-        goto FailDdsLoad;
+        goto DdsLoadFailure;
 
     bytestream.offset = 12;
     information.height = bytestreamReadLong(&bytestream, false);
@@ -42,6 +42,6 @@ struct TextureInformation ddsReadBuffer(void* buffer) {
     information.buffer = bytestreamReadPointer(&bytestream);
 
     return information;
-FailDdsLoad:
+DdsLoadFailure:
     return (struct TextureInformation){0};
 }
