@@ -25,8 +25,11 @@ enum TextureContainer {
 };
 
 struct TextureInformation {
-    unsigned int width;
-    unsigned int height;
+    void* buffer;
+    bool mustFreeBuffer;
+
+    int width;
+    int height;
 
     bool requiresTransformation;
 
@@ -34,7 +37,7 @@ struct TextureInformation {
     enum TextureEncoding format;
 };
 
-void* textureDecode(struct TextureInformation, void*);
+uint8_t* textureDecode(struct TextureInformation);
 size_t textureGetSize(struct TextureInformation);
 bool textureHasAlpha(struct TextureInformation);
 

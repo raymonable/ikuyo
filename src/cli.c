@@ -53,7 +53,7 @@ int main(const int argc, const char* argv[]) {
         else
             executable = argv[0];
 
-        printf("Usage:\n\n%s [format] [input file] [output format]\n\nSupported texture input containers:\n", executable);
+        printf("Usage:\n\n%s [format] [input file] [output format] [optional width] [optional height]\n\nSupported texture input containers:\n", executable);
         for (size_t index = 0; index < sizeof(displayedSupportedInputContainers) / sizeof(displayedSupportedInputContainers[0]); ++index)
             printf("* %s\n", displayedSupportedInputContainers[index]);
         printf("\nSupported image output containers:\n");
@@ -84,8 +84,7 @@ int main(const int argc, const char* argv[]) {
         return 1;
     }
 
-    // Access input file
-
+    // BEGIN: access input file
     FILE* file = NULL;
     fopen_s(&file, inputFileName, "r");
     if (!file) {
@@ -100,59 +99,55 @@ int main(const int argc, const char* argv[]) {
     fread(buffer, 1, fileSize, file);
     fclose(file);
 
-    // Decompress file based on container format
-
-    void* compressedTextureBuffer = NULL;
+    // BEGIN: load from file
     struct TextureInformation textureInformation = {0};
-
     uint64_t startTime = timeInMilliseconds();
 
     switch (textureContainer) {
-        case DDS: {
-            struct DDS dds = ddsReadBuffer(buffer);
-            textureInformation = dds.information;
-            compressedTextureBuffer = dds.buffer;
-            break;
-        }
-        case UE4: {
-            struct UnrealEngineTexture ue = uexpReadBuffer(buffer, fileSize);
-            textureInformation = ue.information;
-            compressedTextureBuffer = ue.buffer;
-            break;
-        }
+        case DDS:
+            textureInformation = ddsReadBuffer(buffer); break;
+        case UE4:
+            textureInformation = uexpReadBuffer(buffer, fileSize); break;
         case UnityAssetBundle: {
             struct AssetBundle ab = assetBundleParse(buffer);
             break;
         }
         default: break;
     }
-
-    if (!compressedTextureBuffer) {
+    if (!textureInformation.buffer) {
         fprintf(stderr, "Unable to read texture\n");
         return 1;
     }
 
-    void* outputBuffer = textureDecode(textureInformation, compressedTextureBuffer);
-    if (!outputBuffer) {
+    // BEGIN: decode texture
+    void* decodedBuffer = textureDecode(textureInformation);
+    if (!decodedBuffer) {
         fprintf(stderr, "Unable to decode texture\n");
         return 1;
     }
-    printf("Decoded texture\n");
+    if (textureInformation.mustFreeBuffer)
+        free(textureInformation.buffer);
+    textureInformation.buffer = decodedBuffer;
+    textureInformation.mustFreeBuffer = true;
 
-    // TODO: per-format cleanup routines
+    if (argc > 5)
+        textureInformation = imageResize(
+            textureInformation,
+            atoi(argv[4]), atoi(argv[5])
+        );
 
+    // BEGIN: save file
     char* outputFileName = malloc(strlen(inputFileName) + 8);
     memset(outputFileName, 0, strlen(inputFileName) + 8);
     memcpy(outputFileName, inputFileName, strlen(inputFileName));
-
-    struct ImageBuffer imageBuffer = {0};
 
     switch (imageFormat) {
         case PNG: memcpy(outputFileName + strlen(inputFileName), ".png", 4); break;
         case WebP: memcpy(outputFileName + strlen(inputFileName), ".webp", 5); break;
         default: break;
     }
-    imageBuffer = imageGenerate(imageFormat, textureInformation, outputBuffer);
+    struct ImageBuffer imageBuffer = imageGenerate(imageFormat, textureInformation, textureInformation.buffer);
+    free(textureInformation.buffer);
 
     if (imageBuffer.buffer != NULL) {
         printf("Decoding & re-encoding took %llu ms\n", timeInMilliseconds() - startTime);
@@ -162,11 +157,14 @@ int main(const int argc, const char* argv[]) {
         fclose(file);
     } else {
         fprintf(stderr, "Failed to encode image");
+        free(outputFileName);
         return 1;
     }
 
-    free(outputBuffer);
+    // NOTE: clean up
+
     free(outputFileName);
+    free(buffer);
 
     imageBufferFree(imageBuffer);
 

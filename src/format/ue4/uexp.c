@@ -5,7 +5,7 @@
 #include <format/ue4/uexp.h>
 #include <common/bytestream.h>
 
-struct UnrealEngineTexture uexpReadBuffer(void* buffer, size_t size) {
+struct TextureInformation uexpReadBuffer(void* buffer, size_t size) {
     // TODO: make this more robust, it currently relies on very specific values
 
     struct TextureInformation information = {0};
@@ -34,11 +34,9 @@ struct UnrealEngineTexture uexpReadBuffer(void* buffer, size_t size) {
     if (strcmp(formatString, "PF_DXT3") == 0) information.format = DXT3;
     if (strcmp(formatString, "PF_DXT5") == 0) information.format = DXT5;
 
-    struct UnrealEngineTexture texture = {0};
-    texture.information = information;
-    texture.buffer = (uint8_t*)bytestreamReadPointer(&bytestream) + 0x20;
-    return texture;
+    information.buffer = (uint8_t*)bytestreamReadPointer(&bytestream) + 0x20;
+    return information;
 
 Ue4LoadFailure:
-    return (struct UnrealEngineTexture){0};
+    return (struct TextureInformation){0};
 }

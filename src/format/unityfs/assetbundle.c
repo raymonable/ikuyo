@@ -29,7 +29,7 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
 
     struct Bytestream bytestream = bytestreamInit(buffer + 8);
 
-    // NOTE: begin read header
+    // BEGIN: read header
     assetBundle.version = bytestreamReadLong(&bytestream, true);
     assetBundle.majorVersion = bytestreamReadString(&bytestream);
     assetBundle.revisionVersion = bytestreamReadString(&bytestream);
@@ -39,7 +39,7 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
     uint32_t decompressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
     uint32_t flags = bytestreamReadLong(&bytestream, true);
 
-    // NOTE: begin read block info
+    // BEGIN: read block info
     uint8_t* compressedBlockInfo = buffer + size - compressedBlockInfoSize;
     if (!(flags & 0x80)) {
         // NOTE: block info is next up

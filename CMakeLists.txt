@@ -4,9 +4,7 @@ project(ikuyo C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
-
-
-include_directories(include external/bcdec)
+include_directories(include external/bcdec external/stb)
 add_executable(ikuyo
         src/cli.c
         src/common/bytestream.c

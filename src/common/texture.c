@@ -8,12 +8,12 @@
 #define BCDEC_IMPLEMENTATION
 #include <bcdec.h>
 
-void* textureDecode(struct TextureInformation information, void* buffer) {
+uint8_t* textureDecode(struct TextureInformation information) {
     if (information.format == UnsupportedEncoding)
         return NULL;
     uint8_t* rgba = malloc(textureGetSize(information));
     memset(rgba, 0, textureGetSize(information));
-    uint8_t* src = buffer;
+    uint8_t* src = information.buffer;
 
     size_t blockSize = information.format >= (int)DXT1 ? 4 : 1;
     bool hasAlpha = textureHasAlpha(information);

@@ -8,11 +8,6 @@
 #include <ikuyo.h>
 #include <common/texture.h>
 
-struct UnrealEngineTexture {
-    struct TextureInformation information;
-    void* buffer;
-};
-
-struct UnrealEngineTexture uexpReadBuffer(void*, size_t);
+struct TextureInformation uexpReadBuffer(void*, size_t);
 
 #endif //IKUYO_UEXP_H

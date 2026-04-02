@@ -18,6 +18,8 @@ struct ImageBuffer {
     size_t size;
 };
 
+struct TextureInformation imageResize(struct TextureInformation, int w, int h);
+
 struct ImageBuffer imageBufferInit(enum ImageContainer, uint8_t* data, size_t size);
 void imageBufferFree(struct ImageBuffer);
 

@@ -7,6 +7,31 @@
 #include <webp/mux.h>
 #include <webp/encode.h>
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include <stb_image_resize2.h>
+
+struct TextureInformation imageResize(struct TextureInformation information, int w, int h) {
+    struct TextureInformation resizedInformation = {0};
+    resizedInformation.buffer = malloc(w * h * 4);
+    resizedInformation.mustFreeBuffer = true;
+    resizedInformation.width = w;
+    resizedInformation.height = h;
+    resizedInformation.format = RGBA;
+
+    stbir_resize_uint8_linear(
+        information.buffer,
+        information.width, information.height, information.width * 4,
+        resizedInformation.buffer,
+        w, h, w * 4,
+        STBIR_RGBA
+    );
+
+    if (information.mustFreeBuffer)
+        free(information.buffer);
+
+    return resizedInformation;
+}
+
 struct ImageBuffer imageBufferInit(enum ImageContainer type, uint8_t* data, size_t size) {
     struct ImageBuffer imageBuffer;
     imageBuffer.type = type;
