@@ -8,6 +8,8 @@
 #include <webp/encode.h>
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STBIR_DEFAULT_FILTER_UPSAMPLE     STBIR_FILTER_POINT_SAMPLE
+#define STBIR_DEFAULT_FILTER_DOWNSAMPLE   STBIR_FILTER_POINT_SAMPLE
 #include <stb_image_resize2.h>
 
 struct TextureInformation imageResize(struct TextureInformation information, int w, int h) {

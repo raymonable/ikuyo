@@ -39,7 +39,7 @@ struct TextureInformation ddsReadBuffer(void* buffer) {
     }
 
     bytestream.offset = 128;
-    buffer = bytestreamReadPointer(&bytestream);
+    information.buffer = bytestreamReadPointer(&bytestream);
 
     return information;
 FailDdsLoad:

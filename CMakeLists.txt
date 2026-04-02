@@ -16,6 +16,14 @@ add_executable(ikuyo
         src/format/ue4/uexp.c
 )
 
+# WebAssembly configuration
+
+if (EMSCRIPTEN)
+    set_target_properties(ikuyo PROPERTIES LINK_FLAGS
+            "-Os -s WASM=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=1MB -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORTED_FUNCTIONS=_free,_malloc,_main"
+    )
+endif()
+
 # Libwebp
 
 set(WEBP_LINK_STATIC ON)
