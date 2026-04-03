@@ -100,33 +100,21 @@ int main(const int argc, const char* argv[]) {
     fclose(file);
 
     // BEGIN: load from file
-    struct TextureInformation textureInformation = {0};
     uint64_t startTime = timeInMilliseconds();
-
-    switch (textureContainer) {
-        case DDS:
-            textureInformation = ddsReadBuffer(buffer); break;
-        case UE4:
-            textureInformation = uexpReadBuffer(buffer, fileSize); break;
-        case UnityAssetBundle: {
-            struct AssetBundle ab = assetBundleParse(buffer);
-            break;
-        }
-        default: break;
-    }
+    struct TextureInformation textureInformation = textureLoad(textureContainer, buffer, fileSize);
     if (!textureInformation.buffer) {
         fprintf(stderr, "Unable to read texture\n");
         return 1;
     }
 
     // BEGIN: decode texture
+    // TODO: rework function to automatically swap texture buffer in texture information
     void* decodedBuffer = textureDecode(textureInformation);
     if (!decodedBuffer) {
         fprintf(stderr, "Unable to decode texture\n");
         return 1;
     }
-    if (textureInformation.mustFreeBuffer)
-        free(textureInformation.buffer);
+    textureFree(textureInformation);
     textureInformation.buffer = decodedBuffer;
     textureInformation.mustFreeBuffer = true;
 

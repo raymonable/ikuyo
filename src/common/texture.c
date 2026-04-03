@@ -5,8 +5,32 @@
 #include <ikuyo.h>
 #include <common/texture.h>
 
+#include <format/dds/dds.h>
+#include <format/unityfs/assetbundle.h>
+#include <format/ue4/uexp.h>
+
 #define BCDEC_IMPLEMENTATION
 #include <bcdec.h>
+
+struct TextureInformation textureLoad(enum TextureContainer container, uint8_t* buffer, size_t size) {
+    switch (container) {
+        case DDS:
+            return ddsReadBuffer(buffer);
+        case UE4:
+            return uexpReadBuffer(buffer, size);
+        case UnityAssetBundle: {
+            struct AssetBundle ab = assetBundleParse(buffer); break;
+            // TODO: extract immediate texture2d if only one is available
+        }
+        default: break;
+    }
+    return (struct TextureInformation){0};
+};
+
+void textureFree(struct TextureInformation information) {
+    if (information.mustFreeBuffer)
+        free(information.buffer);
+}
 
 uint8_t* textureDecode(struct TextureInformation information) {
     if (information.format == UnsupportedEncoding)

@@ -14,8 +14,8 @@ enum ImageContainer {
 };
 struct ImageBuffer {
     enum ImageContainer type;
-    uint8_t* buffer;
     size_t size;
+    uint8_t* buffer;
 };
 
 struct TextureInformation imageResize(struct TextureInformation, int w, int h);
@@ -26,6 +26,6 @@ void imageBufferFree(struct ImageBuffer);
 struct ImageBuffer webpGenerate(struct TextureInformation, uint8_t* rgba);
 struct ImageBuffer pngGenerate(struct TextureInformation, uint8_t* rgba); // NOTE: handled by bridge
 
-struct ImageBuffer imageGenerate(enum ImageContainer, struct TextureInformation, uint8_t* rgba);
+IKUYO_EXPORT struct ImageBuffer imageGenerate(enum ImageContainer, struct TextureInformation, uint8_t* rgba);
 
 #endif //IKUYO_IMAGE_H

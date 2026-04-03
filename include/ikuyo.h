@@ -12,4 +12,10 @@
 #include <string.h>
 #include <math.h>
 
+#if WIN32
+    #define IKUYO_EXPORT __declspec(dllexport)
+#else
+    #define IKUYO_EXPORT __attribute__((visibility("default")))
+#endif
+
 #endif //IKUYO_H

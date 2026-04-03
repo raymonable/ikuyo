@@ -37,7 +37,10 @@ struct TextureInformation {
     enum TextureEncoding format;
 };
 
-uint8_t* textureDecode(struct TextureInformation);
+IKUYO_EXPORT uint8_t* textureDecode(struct TextureInformation);
+IKUYO_EXPORT void textureFree(struct TextureInformation);
+IKUYO_EXPORT struct TextureInformation textureLoad(enum TextureContainer, uint8_t* data, size_t size);
+
 size_t textureGetSize(struct TextureInformation);
 bool textureHasAlpha(struct TextureInformation);
 
