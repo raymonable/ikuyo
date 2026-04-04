@@ -37,6 +37,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}
+          path: ./ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip
+          
   build-msvc-x86:
     runs-on: windows-latest
     env:
@@ -44,6 +46,7 @@ jobs:
       IKUYO_ARCHITECTURE_NAME: i686
       IKUYO_ARCHITECTURE_CROSS: x86
     steps: *build-msvc
+    
   build-msvc-arm64:
     runs-on: windows-latest
     env:
