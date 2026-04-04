@@ -65,15 +65,15 @@ jobs:
             -DCMAKE_CXX_COMPILER=${{ env.IKUYO_ARCHITECTURE_GCC }}-linux-gnu-g++ \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build
-          mkdir bin/ikuyo-linux
-          mv bin/* bin/ikuyo-linux
+          mkdir ikuyo-linux
+          mv bin/* ikuyo-linux
 
       - name: Generate Archive
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: 'zip'
           filename: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
-          path: './bin/ikuyo'
+          path: './ikuyo-linux'
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
