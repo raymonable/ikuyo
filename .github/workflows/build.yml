@@ -15,6 +15,8 @@ jobs:
       
       - name: Pull Latest MSVC
         uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: ${{ env.IKUYO_ARCHITECTURE_MSVC }}
 
       - name: Build using CMake
         run: |
