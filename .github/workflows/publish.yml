@@ -5,9 +5,13 @@ on:
     inputs:
       version:
         required: true
-        description: "Version label for release"
+        description: "Version Label"
       description:
         description: "Release description"
+      prerelease:
+        description: "Pre-release"
+        type: boolean
+        default: false
 
 jobs:
   publish:
@@ -28,3 +32,14 @@ jobs:
           skip_unpack: true
       - name: Enumerate artifacts
         run: ls -A ./artifacts
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          working_directory: artifacts
+          files: *.zip
+          generate_release_notes: true
+          body: ${{ github.event.inputs.description }}
+          tag_name: ${{ github.event.inputs.version }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          make_latest: true
+          
