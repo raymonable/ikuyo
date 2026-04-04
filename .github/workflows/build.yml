@@ -12,6 +12,8 @@ jobs:
       IKUYO_ARCHITECTURE_NAME: x64
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       
       - name: Pull Latest MSVC
         uses: TheMrMilchmann/setup-msvc-dev@v4
