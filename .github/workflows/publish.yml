@@ -29,7 +29,6 @@ jobs:
           workflow_search: true
           workflow_conclusion: success
           path: artifacts
-          skip_unpack: true
       - name: Enumerate artifacts
         run: ls -A ./artifacts
       - name: Release
