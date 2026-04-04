@@ -88,7 +88,7 @@ int main(const int argc, const char* argv[]) {
 
     // BEGIN: access input file
     FILE* file = NULL;
-    fopen_s(&file, inputFileName, "r");
+    fopen_s(&file, inputFileName, "rb");
     if (!file) {
         fprintf(stderr, "Unable to open file '%s'\n", inputFileName);
         return 1;
@@ -98,7 +98,7 @@ int main(const int argc, const char* argv[]) {
     fseek(file, 0, SEEK_SET);
 
     uint8_t* buffer = malloc(fileSize);
-    fread(buffer, 1, fileSize, file);
+    fread(buffer, fileSize, 1, file);
     fclose(file);
 
     // BEGIN: load from file
@@ -108,6 +108,10 @@ int main(const int argc, const char* argv[]) {
         fprintf(stderr, "Unable to read texture\n");
         return 1;
     }
+
+    fopen_s(&file, "test.bin", "wb");
+    fwrite(textureInformation.buffer, textureInformation.width * textureInformation.height * 4, 1, file);
+    fclose(file);
 
     // BEGIN: decode texture
     // TODO: rework function to automatically swap texture buffer in texture information
