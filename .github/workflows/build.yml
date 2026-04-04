@@ -2,6 +2,9 @@ name: ikuyo-cross-platform-build
 
 on:
   push:
+    paths:
+      - '**.c'
+      - '**.h'
   workflow_dispatch:
 
 jobs:
