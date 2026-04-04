@@ -42,8 +42,8 @@ uint8_t* textureDecode(struct TextureInformation information) {
     size_t blockSize = information.format >= (int)DXT1 ? 4 : 1;
     bool hasAlpha = textureHasAlpha(information);
 
-    for (uint32_t y = 0; information.height > (y + blockSize - 1); y += blockSize)
-        for (uint32_t x = 0; information.width > (x + blockSize - 1); x += blockSize) {
+    for (uint32_t y = 0; information.height > y; y += blockSize)
+        for (uint32_t x = 0; information.width > x; x += blockSize) {
             uint8_t* dst = rgba + (y * information.width + x) * 4;
             switch (information.format) {
                 // Uncompressed formats

@@ -111,7 +111,7 @@ int main(const int argc, const char* argv[]) {
 
     // BEGIN: decode texture
     // TODO: rework function to automatically swap texture buffer in texture information
-    void* decodedBuffer = textureDecode(textureInformation);
+    uint8_t* decodedBuffer = textureDecode(textureInformation);
     if (!decodedBuffer) {
         fprintf(stderr, "Unable to decode texture\n");
         return 1;
@@ -137,7 +137,7 @@ int main(const int argc, const char* argv[]) {
         case AVIF: memcpy(outputFileName + strlen(inputFileName), ".avif", 5); break;
         default: break;
     }
-    struct ImageBuffer imageBuffer = imageGenerate(imageFormat, textureInformation, textureInformation.buffer);
+    struct ImageBuffer imageBuffer = imageGenerate(imageFormat, textureInformation);
     free(textureInformation.buffer);
 
     if (imageBuffer.buffer != NULL) {

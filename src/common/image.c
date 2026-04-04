@@ -48,7 +48,7 @@ void imageBufferFree(struct ImageBuffer imageBuffer) {
         free(imageBuffer.buffer);
 };
 
-struct ImageBuffer webpGenerate(struct TextureInformation information, uint8_t* rgba) {
+struct ImageBuffer webpGenerate(struct TextureInformation information) {
     WebPPicture picture = {0};
     WebPConfig config = {0};
 
@@ -65,7 +65,7 @@ struct ImageBuffer webpGenerate(struct TextureInformation information, uint8_t* 
     for (size_t y = 0; information.height > y; y++)
         for (size_t x = 0; information.width > x; x++) {
             size_t offset = y * information.width + x;
-            const uint8_t* src = rgba + offset * 4;
+            const uint8_t* src = information.buffer + offset * 4;
             picture.argb[offset] = (src[3] << 24) | (src[0] << 16) | (src[1] << 8) | src[2];
         }
 
@@ -85,7 +85,7 @@ WebpError:
     return (struct ImageBuffer){0};
 };
 
-struct ImageBuffer avifGenerate(struct TextureInformation information, uint8_t* rgba) {
+struct ImageBuffer avifGenerate(struct TextureInformation information) {
     avifRWData avifOutput = AVIF_DATA_EMPTY;
     avifRGBImage rgb = {0};
 
@@ -99,7 +99,7 @@ struct ImageBuffer avifGenerate(struct TextureInformation information, uint8_t* 
     avifRGBImageSetDefaults(&rgb, image);
     if (avifRGBImageAllocatePixels(&rgb) != AVIF_RESULT_OK) goto AvifError;
 
-    memcpy(rgb.pixels, rgba, rgb.rowBytes * image->height);
+    memcpy(rgb.pixels, information.buffer, rgb.rowBytes * image->height);
     if (avifImageRGBToYUV(image, &rgb) != AVIF_RESULT_OK)goto AvifError;
 
     avifEncoder* encoder = avifEncoderCreate();
@@ -123,11 +123,11 @@ AvifError:
     return (struct ImageBuffer){0};
 }
 
-struct ImageBuffer imageGenerate(enum ImageContainer type, struct TextureInformation information, uint8_t* rgba) {
+struct ImageBuffer imageGenerate(enum ImageContainer type, struct TextureInformation information) {
     switch (type) {
-        case PNG: return pngGenerate(information, rgba);
-        case WebP: return webpGenerate(information, rgba);
-        case AVIF: return avifGenerate(information, rgba);
+        case PNG: return pngGenerate(information);
+        case WebP: return webpGenerate(information);
+        case AVIF: return avifGenerate(information);
         default: break;
     }
     return (struct ImageBuffer){0};

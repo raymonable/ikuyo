@@ -25,7 +25,7 @@ enum TextureContainer {
 };
 
 struct TextureInformation {
-    void* buffer;
+    uint8_t* buffer;
     bool mustFreeBuffer;
 
     int width;

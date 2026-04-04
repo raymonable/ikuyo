@@ -9,10 +9,10 @@ extern "C" {
     #include <common/image.h>
 }
 
-ImageBuffer pngGenerate(TextureInformation information, uint8_t* rgba) {
+ImageBuffer pngGenerate(TextureInformation information) {
     std::vector<uint8_t> buffer;
     fpng::fpng_encode_image_to_memory(
-        rgba, information.width, information.height, 4,
+        information.buffer, information.width, information.height, 4,
         buffer, 0
     );
     ImageBuffer imageBuffer = imageBufferInit(PNG, buffer.data(), buffer.size());
