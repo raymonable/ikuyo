@@ -95,4 +95,4 @@ jobs:
     env:
       IKUYO_ARCHITECTURE_GCC: aarch64
       IKUYO_ARCHITECTURE_NAME: arm64
-    steps: *build-linux
+    steps: *build-gcc
