@@ -31,23 +31,57 @@ jobs:
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: 'zip'
-          filename: 'ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+          filename: 'ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
           path: './bin/ikuyo'
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}
-          path: ./ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip
+          name: 'ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}'
+          path: './ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
           
-  build-msvc-x86:
-    runs-on: windows-latest
+  build-linux-x64:
+    runs-on: ubuntu-latest
     env:
-      IKUYO_ARCHITECTURE_MSVC: Win32
-      IKUYO_ARCHITECTURE_NAME: i686
-      IKUYO_ARCHITECTURE_CROSS: x86
-    steps: *build-msvc
-    
+      IKUYO_ARCHITECTURE_GCC: x86-64
+      IKUYO_ARCHITECTURE_NAME: x86_64
+    steps: &build-gcc
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ env.IKUYO_ARCHITECTURE_GCC }}-linux-gnu g++-${{ env.IKUYO_ARCHITECTURE_GCC }}-linux-gnu
+
+      - name: Build with CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ env.IKUYO_ARCHITECTURE_GCC }} \
+            -DCMAKE_C_COMPILER=${{ env.IKUYO_ARCHITECTURE_GCC }}-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=${{ env.IKUYO_ARCHITECTURE_GCC }}-linux-gnu-g++ \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          mkdir bin/ikuyo
+          mv bin/* bin/ikuyo/*
+
+      - name: Generate Archive
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+          type: 'zip'
+          filename: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+          path: './bin/ikuyo'
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}'
+          path: './ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+
+  # Define additional platforms to build for below
+
   build-msvc-arm64:
     runs-on: windows-latest
     env:
@@ -55,4 +89,10 @@ jobs:
       IKUYO_ARCHITECTURE_NAME: arm64
       IKUYO_ARCHITECTURE_CROSS: amd64_arm64
     steps: *build-msvc
-          
+    
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    env:
+      IKUYO_ARCHITECTURE_GCC: aarch64
+      IKUYO_ARCHITECTURE_NAME: arm64
+    steps: *build-linux
