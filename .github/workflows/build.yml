@@ -5,12 +5,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-msvc-x64: &build-msvc
+  build-msvc-x64:
     runs-on: windows-latest
     env:
       IKUYO_ARCHITECTURE_MSVC: x64
-      IKUYO_ARCHITECTURE_NAME: x64
-    steps:
+      IKUYO_ARCHITECTURE_NAME: x86_64
+      IKUYO_ARCHITECTURE_CROSS: x64
+    steps: &build-msvc
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -18,19 +19,36 @@ jobs:
       - name: Pull Latest MSVC
         uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
-          arch: ${{ env.IKUYO_ARCHITECTURE_MSVC }}
+          arch: ${{ env.IKUYO_ARCHITECTURE_CROSS }}
 
       - name: Build using CMake
         run: |
           cmake -S . -B build -G "Visual Studio 17 2022" -A ${{ env.IKUYO_ARCHITECTURE_MSVC }}
           cmake --build build --config Release
 
-      - name: Create archive
-        run: zip -r ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip ./bin/Release
+      - name: Generate Archive
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+          type: 'zip'
+          filename: 'ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+          path: './bin/Release'
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}
-
+  build-msvc-x86:
+    runs-on: windows-latest
+    env:
+      IKUYO_ARCHITECTURE_MSVC: Win32
+      IKUYO_ARCHITECTURE_NAME: i686
+      IKUYO_ARCHITECTURE_CROSS: ARM64
+    steps: *build-msvc
+  build-msvc-arm64:
+    runs-on: windows-latest
+    env:
+      IKUYO_ARCHITECTURE_MSVC: 
+      IKUYO_ARCHITECTURE_NAME: arm64
+      IKUYO_ARCHITECTURE_CROSS: amd64_arm64
+    steps: *build-msvc
           
