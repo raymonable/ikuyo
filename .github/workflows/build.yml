@@ -1,0 +1,32 @@
+name: ikuyo-cross-platform-build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-msvc-x64: &build-msvc
+    runs-on: windows-latest
+    env:
+      IKUYO_ARCHITECTURE_MSVC: x64
+      IKUYO_ARCHITECTURE_NAME: x64
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Pull Latest MSVC
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+
+      - name: Build using CMake
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A ${{ env.IKUYO_ARCHITECTURE_MSVC }}
+          cmake --build build --config Release
+
+      - name: Create archive
+        run: zip -r ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip ./bin/Release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ikuyo-${{ env.IKUYO_ARCHITECTURE_NAME }}
+
+          
