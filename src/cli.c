@@ -19,7 +19,8 @@ const char* displayedSupportedInputContainers[] = {
 
 const char* displayedSupportOutputContainers[] = {
     "png (fast, low compression)",
-    "webp (slow, high compression)"
+    "webp (slow, high compression)",
+    "avif (slowest, high compression)"
 };
 
 #ifndef WIN32
@@ -79,6 +80,7 @@ int main(const int argc, const char* argv[]) {
     enum ImageContainer imageFormat = NoContainer;
     if (_strcmpi(outputFileFormat, "png") == 0) imageFormat = PNG;
     if (_strcmpi(outputFileFormat, "webp") == 0) imageFormat = WebP;
+    if (_strcmpi(outputFileFormat, "avif") == 0) imageFormat = AVIF;
     if (imageFormat == NoContainer) {
         fprintf(stderr, "Unknown image container format '%s'\n", inputFormatString);
         return 1;
@@ -132,13 +134,14 @@ int main(const int argc, const char* argv[]) {
     switch (imageFormat) {
         case PNG: memcpy(outputFileName + strlen(inputFileName), ".png", 4); break;
         case WebP: memcpy(outputFileName + strlen(inputFileName), ".webp", 5); break;
+        case AVIF: memcpy(outputFileName + strlen(inputFileName), ".avif", 5); break;
         default: break;
     }
     struct ImageBuffer imageBuffer = imageGenerate(imageFormat, textureInformation, textureInformation.buffer);
     free(textureInformation.buffer);
 
     if (imageBuffer.buffer != NULL) {
-        printf("Decoding & re-encoding took %llu ms\n", timeInMilliseconds() - startTime);
+        printf("Decoding & re-encoding as %s took %llu ms\n", outputFileFormat, timeInMilliseconds() - startTime);
 
         fopen_s(&file, outputFileName, "wb");
         fwrite(imageBuffer.buffer, imageBuffer.size, 1, file);

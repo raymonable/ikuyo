@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-set(IKUYO_LIBRARIES webp ikuyo_bridge lz4)
+set(IKUYO_LIBRARIES webp ikuyo_bridge lz4 avif)
 
 include_directories(include external/bcdec external/stb)
 add_library(ikuyo SHARED
@@ -41,8 +41,9 @@ if (EMSCRIPTEN)
     )
 endif()
 
-# Libwebp
+# libavif / libwebp
 
+set(BUILD_SHARED_LIBS OFF)
 set(WEBP_LINK_STATIC ON)
 set(WEBP_BUILD_ANIM_UTILS OFF)
 set(WEBP_BUILD_CWEBP OFF)
@@ -56,6 +57,13 @@ set(WEBP_BUILD_EXTRAS OFF)
 set(WEBP_BUILD_TESTS OFF)
 
 add_subdirectory(external/libwebp)
+
+set(AVIF_LIBYUV OFF)
+set(AVIF_CODEC_LIBGAV1 "LOCAL")
+set(AVIF_CODEC_SVT "LOCAL")
+set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like additional optimizations
+
+add_subdirectory(external/libavif)
 
 # LZ4
 

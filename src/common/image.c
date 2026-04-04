@@ -6,6 +6,7 @@
 
 #include <webp/mux.h>
 #include <webp/encode.h>
+#include <avif/avif.h>
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_DEFAULT_FILTER_UPSAMPLE     STBIR_FILTER_POINT_SAMPLE
@@ -84,10 +85,49 @@ WebpError:
     return (struct ImageBuffer){0};
 };
 
+struct ImageBuffer avifGenerate(struct TextureInformation information, uint8_t* rgba) {
+    avifRWData avifOutput = AVIF_DATA_EMPTY;
+    avifRGBImage rgb = {0};
+
+    avifImage* image = avifImageCreate(
+        information.width, information.height,
+        8, AVIF_PIXEL_FORMAT_YUV420
+    );
+    if (!image)
+        goto AvifError;
+
+    avifRGBImageSetDefaults(&rgb, image);
+    if (avifRGBImageAllocatePixels(&rgb) != AVIF_RESULT_OK) goto AvifError;
+
+    memcpy(rgb.pixels, rgba, rgb.rowBytes * image->height);
+    if (avifImageRGBToYUV(image, &rgb) != AVIF_RESULT_OK)goto AvifError;
+
+    avifEncoder* encoder = avifEncoderCreate();
+    if (!encoder) goto AvifError;
+
+    encoder->quality = 50;
+    encoder->qualityAlpha = AVIF_QUALITY_BEST;
+
+    if (avifEncoderAddImage(encoder, image, 1, AVIF_ADD_IMAGE_FLAG_SINGLE) != AVIF_RESULT_OK) goto AvifError;
+    if (avifEncoderFinish(encoder, &avifOutput) != AVIF_RESULT_OK) goto AvifError;
+
+    struct ImageBuffer imageBuffer = imageBufferInit(AVIF, avifOutput.data, avifOutput.size);
+
+    avifImageDestroy(image);
+    avifEncoderDestroy(encoder);
+    avifRWDataFree(&avifOutput);
+    avifRGBImageFreePixels(&rgb);
+
+    return imageBuffer;
+AvifError:
+    return (struct ImageBuffer){0};
+}
+
 struct ImageBuffer imageGenerate(enum ImageContainer type, struct TextureInformation information, uint8_t* rgba) {
     switch (type) {
         case PNG: return pngGenerate(information, rgba);
         case WebP: return webpGenerate(information, rgba);
+        case AVIF: return avifGenerate(information, rgba);
         default: break;
     }
     return (struct ImageBuffer){0};

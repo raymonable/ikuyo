@@ -13,3 +13,4 @@ ikuyo is a texture decoder for several SEGA-like games
 
 - PNG (via fpng), fast but worse compression
 - WebP (via libwebp), slow but better compression
+- AVIF (via libavif/SV1-AV1), slowest but best compression
