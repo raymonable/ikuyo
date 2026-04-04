@@ -109,10 +109,6 @@ int main(const int argc, const char* argv[]) {
         return 1;
     }
 
-    fopen_s(&file, "test.bin", "wb");
-    fwrite(textureInformation.buffer, textureInformation.width * textureInformation.height * 4, 1, file);
-    fclose(file);
-
     // BEGIN: decode texture
     // TODO: rework function to automatically swap texture buffer in texture information
     uint8_t* decodedBuffer = textureDecode(textureInformation);
