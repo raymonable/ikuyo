@@ -36,7 +36,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           working_directory: artifacts
-          files: *.zip
+          files: '*.zip'
           generate_release_notes: true
           body: ${{ github.event.inputs.description }}
           tag_name: ${{ github.event.inputs.version }}
