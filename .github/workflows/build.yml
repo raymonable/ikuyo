@@ -42,12 +42,12 @@ jobs:
     env:
       IKUYO_ARCHITECTURE_MSVC: Win32
       IKUYO_ARCHITECTURE_NAME: i686
-      IKUYO_ARCHITECTURE_CROSS: ARM64
+      IKUYO_ARCHITECTURE_CROSS: x86
     steps: *build-msvc
   build-msvc-arm64:
     runs-on: windows-latest
     env:
-      IKUYO_ARCHITECTURE_MSVC: 
+      IKUYO_ARCHITECTURE_MSVC: ARM64
       IKUYO_ARCHITECTURE_NAME: arm64
       IKUYO_ARCHITECTURE_CROSS: amd64_arm64
     steps: *build-msvc
