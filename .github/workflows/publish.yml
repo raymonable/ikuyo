@@ -1,0 +1,25 @@
+name: ikuyo-publish-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: "Version label for release"
+      description:
+        description: "Release description"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v20
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: build.yml
+          workflow_search: true
+          workflow_conclusion: success
+          path: artifacts
+      - name: Enumerate artifacts
+        run: ls -A ./artifacts
