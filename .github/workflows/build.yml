@@ -5,6 +5,7 @@ on:
     paths:
       - '**.c'
       - '**.h'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 jobs:
@@ -30,18 +31,11 @@ jobs:
           cmake --build build --config Release
           ren "./bin/Release" "ikuyo-windows"
 
-      - name: Generate Archive
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: 'zip'
-          filename: 'ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
-          path: './bin/ikuyo-windows'
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: 'ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}'
-          path: './ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+          path: './ikuyo-windows'
           
   build-linux-x64:
     runs-on: ubuntu-latest
@@ -71,18 +65,11 @@ jobs:
           mkdir ikuyo-linux
           mv bin/* ikuyo-linux
 
-      - name: Generate Archive
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: 'zip'
-          filename: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
-          path: './ikuyo-linux'
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}'
-          path: './ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}.zip'
+          path: './ikuyo-linux'
 
   # Define additional platforms to build for below
 
