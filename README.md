@@ -10,6 +10,7 @@ ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games 
 
 - DDS (DirectDraw Surface) with DXT1/3/5 or RGB/RGBA
 - UE4 Texture (.uexp, specifically 4.19.2)
+- TXP (only via .farc)
 
 ### Output
 
@@ -56,8 +57,9 @@ cmake --build build
 
 ## Acknowledgements
 
-- All external libraries (excluding AVIF encoders/decoders) are available to view via the [external](./external) directory.
-- The Unity implementation is derived from [Razviar's AssetStudio fork](https://github.com/Razviar/assetstudio).
+- All external libraries (excluding AVIF encoders/decoders) are available to view via the [external](./external) directory
+- The Unity implementation is derived from [Razviar's AssetStudio fork](https://github.com/Razviar/assetstudio)
+- Project DIVA TXP implementation referenced [diva-rust-modding txp library](https://github.com/diva-rust-modding/txp)
 
 Thank you to everyone who has contributed to ikuyo and/or it's dependencies.
 

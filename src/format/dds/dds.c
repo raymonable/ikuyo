@@ -6,7 +6,7 @@
 #include <common/bytestream.h>
 #include <format/dds/dds.h>
 
-struct TextureInformation ddsReadBuffer(void* buffer) {
+struct TextureInformation ddsReadBuffer(uint8_t* buffer) {
     struct TextureInformation information = {0};
     struct Bytestream bytestream = bytestreamInit(buffer);
 

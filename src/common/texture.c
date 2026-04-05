@@ -8,6 +8,8 @@
 #include <format/dds/dds.h>
 #include <format/unityfs/assetbundle.h>
 #include <format/ue4/uexp.h>
+#include <format/aft/farc.h>
+#include <format/aft/txp.h>
 
 #define BCDEC_IMPLEMENTATION
 #include <bcdec.h>
@@ -21,6 +23,12 @@ struct TextureInformation textureLoad(enum TextureContainer container, uint8_t* 
         case UnityAssetBundle: {
             struct AssetBundle ab = assetBundleParse(buffer); break;
             // TODO: extract immediate texture2d if only one is available
+        }
+        case FArC: {
+            uint8_t* txpBuffer = farcReadBuffer(buffer);
+            struct TextureInformation information = txpReadBuffer(txpBuffer);
+            //free(txpBuffer);
+            break;
         }
         default: break;
     }

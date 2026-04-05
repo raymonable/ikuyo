@@ -5,7 +5,7 @@
 #include <format/ue4/uexp.h>
 #include <common/bytestream.h>
 
-struct TextureInformation uexpReadBuffer(void* buffer, size_t size) {
+struct TextureInformation uexpReadBuffer(uint8_t* buffer, size_t size) {
     // TODO: make this more robust, it currently relies on very specific values
 
     struct TextureInformation information = {0};

@@ -72,6 +72,7 @@ int main(const int argc, const char* argv[]) {
     if (_strcmpi(inputFormatString, "dds") == 0) textureContainer = DDS;
     if (_strcmpi(inputFormatString, "ab") == 0) textureContainer = UnityAssetBundle;
     if (_strcmpi(inputFormatString, "ue4") == 0) textureContainer = UE4;
+    if (_strcmpi(inputFormatString, "farc") == 0) textureContainer = FArC;
     if (textureContainer == UnknownContainer) {
         fprintf(stderr, "Unknown texture container format '%s'\n", inputFormatString);
         return 1;

@@ -7,9 +7,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-set(IKUYO_LIBRARIES webp ikuyo_bridge lz4 avif)
+set(IKUYO_LIBRARIES
+    webp avif
+    lz4 libdeflate_static
+    ikuyo_bridge
+)
 
-include_directories(include external/bcdec external/stb)
+include_directories(include external/bcdec external/stb external/libdeflate)
 add_library(ikuyo SHARED
         # TODO: export a shared library interface
         src/common/bytestream.c
@@ -19,6 +23,8 @@ add_library(ikuyo SHARED
         src/format/dds/dds.c
         src/format/unityfs/assetbundle.c
         src/format/ue4/uexp.c
+        src/format/aft/farc.c
+        src/format/aft/txp.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES PDB_NAME "ikuyo-lib")
@@ -65,9 +71,10 @@ set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like addit
 
 add_subdirectory(external/libavif)
 
-# LZ4
+# LZ4 / libdeflate
 
 add_subdirectory(external/lz4/build/cmake)
+add_subdirectory(external/libdeflate)
 
 # Bridge
 

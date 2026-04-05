@@ -14,6 +14,6 @@
 #define FORMAT_DXT3_MAGIC 0x33545844
 #define FORMAT_DXT5_MAGIC 0x35545844
 
-struct TextureInformation ddsReadBuffer(void* buffer);
+struct TextureInformation ddsReadBuffer(uint8_t* buffer);
 
 #endif //IKUYO_DDS_H

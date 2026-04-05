@@ -21,7 +21,7 @@ enum TextureContainer {
     UnknownContainer = 0,
     DDS,
     UnityAssetBundle,
-    UE4
+    UE4, FArC
 };
 
 struct TextureInformation {
