@@ -18,8 +18,6 @@ struct ImageBuffer {
     uint8_t* buffer;
 };
 
-struct TextureInformation imageResize(struct TextureInformation, int w, int h);
-
 struct ImageBuffer imageBufferInit(enum ImageContainer, uint8_t* data, size_t size);
 IKUYO_EXPORT void imageBufferFree(struct ImageBuffer);
 

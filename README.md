@@ -10,7 +10,6 @@ ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games 
 
 - DDS (DirectDraw Surface) with DXT1/3/5 or RGB/RGBA
 - UE4 Texture (.uexp, specifically 4.19.2)
-- TXP (only via .farc)
 
 ### Output
 

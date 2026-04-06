@@ -5,26 +5,69 @@
 #include <format/aft/txp.h>
 #include <common/bytestream.h>
 
-#include <stdio.h>
-struct TextureInformation txpReadBuffer(uint8_t* buffer) {
-    // TODO: refactor to not include headerOffset, as that should be handled by the FARC decompressor and NOT the TXP reader
+float clamp(float val) {
+    return val > 255 ? 255 : (val < 0 ? 0 : val);
+}
+
+struct TextureInformation txpGetTextureInformationFromMip(uint8_t* mip) {
+    struct Bytestream bytestream = bytestreamInit(mip);
+
+    // BEGIN: read mipmap data
+    if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicMipmap)
+        return (struct TextureInformation){0};
+
+    struct TextureInformation information = {0};
+
+    information.width = (int)bytestreamReadLong(&bytestream, false);
+    information.height = (int)bytestreamReadLong(&bytestream, false);
+    information.format = UnsupportedEncoding;
+    switch (bytestreamReadLong(&bytestream, false)) {
+        case 1: information.format = RGB; break;
+        case 2: information.format = RGBA; break;
+        case 6: case 7: information.format = DXT1; break;
+        case 8: information.format = DXT3; break;
+        case 9: information.format = DXT5; break;
+        case 10: information.format = ATI1; break;
+        case 11: information.format = ATI2; break;
+        case 15: information.format = BC7; break;
+        default: break;
+    }
+    bytestream.offset += 8;
+
+    information.buffer = bytestreamReadPointer(&bytestream);
+    information.requiresTransformation = true;
+
+    return information;
+}
+
+struct TextureArray txpReadBuffer(uint8_t* buffer, size_t size) {
     struct Bytestream bytestream = bytestreamInit(buffer);
 
-    bytestream.offset += 4;
-    uint32_t headerOffset = bytestreamReadLong(&bytestream, false);
-    bytestream.offset = headerOffset;
+    // BEGIN: verify contents, both cleaned txp and extracted are supported
+    uint8_t* bufferOffset = buffer;
+    if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas) {
+        uint32_t headerOffset = bytestreamReadLong(&bytestream, false);;
+        if (headerOffset > size)
+            goto TxpLoadFailure;
+
+        bufferOffset += headerOffset;
+        bytestream.data = bufferOffset;
+        bytestream.offset = 0;
+
+        if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas)
+            goto TxpLoadFailure;
+    }
 
     // BEGIN: read texture atlas data
-    if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas) goto TxpLoadFailure;
 
     uint32_t mapCount = bytestreamReadLong(&bytestream, false);
     bytestreamReadLong(&bytestream, false);
 
-    // NOTE: txp can contain multiple textures in a single file, so it has to be more complex than a simple TextureInformation
+    struct TextureArray array = {0};
+
     for (size_t index = 0; index < mapCount; index++) {
-        struct Bytestream textureBytestream = bytestreamInit(buffer);
-        uint32_t textureFileOffset = bytestreamReadLong(&bytestream, false);;
-        textureBytestream.offset = headerOffset + textureFileOffset;
+        uint8_t* bufferTextureOffset = bufferOffset + bytestreamReadLong(&bytestream, false);
+        struct Bytestream textureBytestream = bytestreamInit(bufferTextureOffset);
 
         // BEGIN: read texture data
         if (bytestreamReadLong(&textureBytestream, true) != TXP_MAGIC + TxpMagicTexture) goto TxpLoadFailure;
@@ -32,36 +75,62 @@ struct TextureInformation txpReadBuffer(uint8_t* buffer) {
         uint32_t mipCount = bytestreamReadLong(&textureBytestream, false);
         bytestreamReadLong(&textureBytestream, false);
 
-        for (size_t mipIndex = 0; mipIndex < mipCount; mipIndex++) {
-            struct Bytestream mipBytestream = bytestreamInit(buffer);
-            mipBytestream.offset = headerOffset + textureFileOffset + bytestreamReadLong(&textureBytestream, false);
+        struct TextureInformation textureInformation = txpGetTextureInformationFromMip(
+            bufferTextureOffset + bytestreamReadLong(&textureBytestream, false)
+        );
+        if (textureInformation.format == ATI2 && mipCount > 1) {
+            // NOTE: the texture is AY/UV, 2 buffer image
+            struct TextureInformation alternateTextureInformation = txpGetTextureInformationFromMip(
+                bufferTextureOffset + bytestreamReadLong(&textureBytestream, false)
+            );
+            if (textureInformation.buffer != NULL && alternateTextureInformation.buffer != NULL) {
+                // NOTE: the BC6 (ATI2) has to be decoded before we can process it
+                textureDecode(&textureInformation);
+                textureDecode(&alternateTextureInformation);
 
-            // BEGIN: read mipmap data
-            if (bytestreamReadLong(&mipBytestream, true) != TXP_MAGIC + TxpMagicMipmap) goto TxpLoadFailure;
+                uint8_t* rgba = malloc(textureGetSize(&textureInformation));
 
-            uint32_t width = bytestreamReadLong(&mipBytestream, false);
-            uint32_t height = bytestreamReadLong(&mipBytestream, false);
-            uint32_t format = bytestreamReadLong(&mipBytestream, false);
-            uint32_t id = bytestreamReadLong(&mipBytestream, false);
-            uint32_t bufferSize = bytestreamReadLong(&mipBytestream, false);
+                // BEGIN: convert from separate AY / UV channels into a single RGBA
+                for (uint32_t y = 0; y < textureInformation.height; y++) {
+                    for (uint32_t x = 0; x < textureInformation.width; x++) {
+                        uint32_t offsetUV = ((y / 2) * alternateTextureInformation.width + (x / 2)) * 4;
+                        uint32_t offsetAY = (y * textureInformation.width + x) * 4;
+                        uint8_t* dst = rgba + offsetAY;
 
-            enum TextureEncoding encoding = UnsupportedEncoding;
-            switch (format) {
-                case 1: encoding = RGB; break;
-                case 2: encoding = RGBA; break;
-                case 6: case 7: encoding = DXT1; break;
-                case 8: encoding = DXT3; break;
-                case 9: encoding = DXT5; break;
-                // NOTE: our target is AFT, this is redundant as this only appears in MM+ , but it's only an extra statement
-                case 15: encoding = BC7; break;
-                default: break;
-            }
+                        const float cy = textureInformation.buffer[offsetAY + 0];
+                        const float cb = alternateTextureInformation.buffer[offsetUV + 0] - 128;
+                        const float cr = alternateTextureInformation.buffer[offsetUV + 1] - 128;
 
-            // NOTE: next is the data... to be implemented
+                        dst[0] = (uint8_t)(clamp(cy + (cr * 1.403f)));
+                        dst[1] = (uint8_t)(clamp(cy - (cb * 0.344f) - (cr * 0.714f)));
+                        dst[2] = (uint8_t)(clamp(cy + (cb * 1.770f)));
+                        dst[3] = textureInformation.buffer[offsetAY + 1];
+                    }
+                }
+
+                struct TextureInformation information = {0};
+                information.format = RGBA;
+                information.width = textureInformation.width;
+                information.height = textureInformation.height;
+                information.buffer = rgba;
+                information.mustFreeBuffer = true;
+
+                textureArrayAdd(&array, &information);
+
+                textureFree(&textureInformation);
+                textureFree(&alternateTextureInformation);
+            } else
+                goto TxpLoadFailure;
+        } else {
+            // NOTE: typical texture
+            if (!textureInformation.buffer) goto TxpLoadFailure;
+            textureDecode(&textureInformation);
+            textureArrayAdd(&array, &textureInformation);
         }
     }
 
+    return array;
 
 TxpLoadFailure:
-    return (struct TextureInformation){0};
+    return (struct TextureArray){0};
 };

@@ -11,9 +11,8 @@ enum TextureEncoding {
     UnsupportedEncoding = 0,
     RGB, RGBA,
     BGR, BGRA,
-    DXT1,
-    DXT3,
-    DXT5,
+    DXT1, DXT3, DXT5,
+    ATI1, ATI2,
     BC7
 };
 
@@ -37,11 +36,22 @@ struct TextureInformation {
     enum TextureEncoding format;
 };
 
-IKUYO_EXPORT uint8_t* textureDecode(struct TextureInformation);
-IKUYO_EXPORT void textureFree(struct TextureInformation);
+struct TextureArray {
+    struct TextureInformation* data;
+    uint32_t count;
+};
+
+IKUYO_EXPORT void textureArrayAdd(struct TextureArray*, struct TextureInformation*);
+IKUYO_EXPORT void textureArrayFree(struct TextureArray*);
+
+IKUYO_EXPORT void textureDecode(struct TextureInformation*);
+IKUYO_EXPORT void textureFree(struct TextureInformation*);
+
 IKUYO_EXPORT struct TextureInformation textureLoad(enum TextureContainer, uint8_t* data, size_t size);
 
-size_t textureGetSize(struct TextureInformation);
-bool textureHasAlpha(struct TextureInformation);
+struct TextureInformation textureResize(struct TextureInformation, int w, int h);
+
+size_t textureGetSize(struct TextureInformation*);
+bool textureHasAlpha(struct TextureInformation*);
 
 #endif //IKUYO_TEXTURE_H

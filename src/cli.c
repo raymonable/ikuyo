@@ -13,8 +13,9 @@
 #include <stdio.h>
 
 const char* displayedSupportedInputContainers[] = {
-    "dds (DirectDraw Surface, DirectX)",
-    "ab (Unity AssetBundle)"
+    "dds (DirectDraw Surface)",
+    "uexp (Unreal Engine 4 Texture, limited)"
+    // TODO: add Unity & txp/farc when completed and functional via CLI
 };
 
 const char* displayedSupportOutputContainers[] = {
@@ -32,7 +33,7 @@ long long timeInMilliseconds(void) {
     struct timeval tv;
 
     gettimeofday(&tv,NULL);
-    return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
+    return (((long long)tv.tv_sec) * 1000)+(tv.tv_usec / 1000);
 }
 #else
 #define WIN32_LEAN_AND_MEAN
@@ -70,9 +71,9 @@ int main(const int argc, const char* argv[]) {
 
     enum TextureContainer textureContainer = UnknownContainer;
     if (_strcmpi(inputFormatString, "dds") == 0) textureContainer = DDS;
-    if (_strcmpi(inputFormatString, "ab") == 0) textureContainer = UnityAssetBundle;
-    if (_strcmpi(inputFormatString, "ue4") == 0) textureContainer = UE4;
-    if (_strcmpi(inputFormatString, "farc") == 0) textureContainer = FArC;
+    if (_strcmpi(inputFormatString, "ab") == 0) textureContainer = UnityAssetBundle; // NOTE: incomplete
+    if (_strcmpi(inputFormatString, "uexp") == 0) textureContainer = UE4;
+    if (_strcmpi(inputFormatString, "farc") == 0) textureContainer = FArC; // NOTE: incomplete
     if (textureContainer == UnknownContainer) {
         fprintf(stderr, "Unknown texture container format '%s'\n", inputFormatString);
         return 1;
@@ -111,18 +112,14 @@ int main(const int argc, const char* argv[]) {
     }
 
     // BEGIN: decode texture
-    // TODO: rework function to automatically swap texture buffer in texture information
-    uint8_t* decodedBuffer = textureDecode(textureInformation);
-    if (!decodedBuffer) {
+    textureDecode(&textureInformation);
+    if (!textureInformation.buffer) {
         fprintf(stderr, "Unable to decode texture\n");
         return 1;
     }
-    textureFree(textureInformation);
-    textureInformation.buffer = decodedBuffer;
-    textureInformation.mustFreeBuffer = true;
 
     if (argc > 5)
-        textureInformation = imageResize(
+        textureInformation = textureResize(
             textureInformation,
             atoi(argv[4]), atoi(argv[5])
         );

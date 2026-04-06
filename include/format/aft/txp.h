@@ -14,6 +14,6 @@ enum TxpMagicType {
     TxpMagicTexture = 4,
 };
 
-struct TextureInformation txpReadBuffer(uint8_t* buffer);
+struct TextureArray txpReadBuffer(uint8_t* buffer, size_t size);
 
 #endif //IKUYO_TXP_H
