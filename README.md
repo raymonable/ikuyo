@@ -67,4 +67,4 @@ cmake --build build
 Thank you to everyone who has contributed to Ikuyo and/or it's dependencies.
 
 <hr>
-<sub>The *BOCCHI THE ROCK!* animation and derivatives are property of CloverWorks and Aki Hamazi. All rights belong to their respective owners. No copyright infringement is intended.</sub>
+<sub>The <i>BOCCHI THE ROCK!</i> animation and derivatives are property of CloverWorks and Aki Hamazi. All rights belong to their respective owners. No copyright infringement is intended.</sub>
