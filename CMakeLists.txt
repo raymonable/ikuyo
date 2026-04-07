@@ -24,6 +24,7 @@ add_library(ikuyo SHARED
         src/format/dds/dds.c
         src/format/unityfs/assetbundle.c
         src/format/ue4/uexp.c
+
         src/format/aft/farc.c
         src/format/aft/txp.c
 )
@@ -32,7 +33,7 @@ set_target_properties(ikuyo PROPERTIES PDB_NAME "ikuyo-lib")
 
 add_executable(ikuyo_cli
         $<TARGET_OBJECTS:ikuyo>
-        src/cli.c
+        src/interface/cli.c
 )
 target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo_cli PROPERTIES
@@ -75,13 +76,18 @@ add_subdirectory(external/libavif)
 
 # LZ4 / libdeflate
 
+set(LIBDEFLATE_BUILD_STATIC_LIB ON)
+set(LIBDEFLATE_BUILD_SHARED_LIB OFF)
+set(LIBDEFLATE_USE_SHARED_LIB OFF)
+set(LIBDEFLATE_BUILD_TESTS OFF)
+
 add_subdirectory(external/lz4/build/cmake)
 add_subdirectory(external/libdeflate)
 
 # Bridge
 
 add_library(ikuyo_bridge STATIC
-        src/bridge.cpp
+        src/common/bridge/bridge.cpp
         external/fpng/src/fpng.cpp
 )
 set_target_properties(ikuyo_bridge PROPERTIES LANGUAGE CXX)

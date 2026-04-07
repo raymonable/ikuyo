@@ -41,6 +41,14 @@ struct TextureArray {
     uint32_t count;
 };
 
+struct TextureLoaderImplementation {
+    const char* name;
+    const char* description;
+    const char* fileExtension;
+    bool (*detect)(uint8_t* buffer, size_t size);
+    struct TextureArray (*load)(uint8_t* buffer, size_t size);
+};
+
 IKUYO_EXPORT void textureArrayAdd(struct TextureArray*, struct TextureInformation*);
 IKUYO_EXPORT void textureArrayFree(struct TextureArray*);
 

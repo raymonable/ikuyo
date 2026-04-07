@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Wait for previous workflow completion
         uses: ArcticLampyrid/action-wait-for-workflow@v1
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           workflow: build.yml
       - name: Download artifact
@@ -34,6 +36,8 @@ jobs:
         run: ls -A ./artifacts
       - name: Release
         uses: softprops/action-gh-release@v2
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           working_directory: artifacts
           files: '*.zip'

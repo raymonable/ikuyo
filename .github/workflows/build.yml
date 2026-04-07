@@ -16,7 +16,7 @@ jobs:
       IKUYO_ARCHITECTURE_NAME: x86_64
       IKUYO_ARCHITECTURE_CROSS: x64
     steps: &build-msvc
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       
@@ -32,7 +32,7 @@ jobs:
           ren "./bin/Release" "ikuyo-windows"
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: 'ikuyo-windows-${{ env.IKUYO_ARCHITECTURE_NAME }}'
           path: './bin/ikuyo-windows'
@@ -44,7 +44,7 @@ jobs:
       IKUYO_ARCHITECTURE_GCC: x86_64
       IKUYO_ARCHITECTURE_NAME: x86_64
     steps: &build-gcc
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -66,7 +66,7 @@ jobs:
           mv bin/* ikuyo-linux
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}'
           path: './ikuyo-linux'
@@ -85,6 +85,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IKUYO_ARCHITECTURE_APT: aarch64
-      IKUYO_ARCHITECTURE_GCC: aarch64
       IKUYO_ARCHITECTURE_NAME: arm64
+      IKUYO_ARCHITECTURE_GCC: aarch64
     steps: *build-gcc
