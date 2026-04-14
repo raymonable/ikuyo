@@ -14,8 +14,10 @@
 
 #if WIN32
     #define IKUYO_EXPORT __declspec(dllexport)
+    #define strcmpi _strcmpi
 #else
     #define IKUYO_EXPORT __attribute__((visibility("default")))
+    #define strcmpi strcasecmp
 #endif
 
 #endif //IKUYO_H

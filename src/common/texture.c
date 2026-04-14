@@ -19,51 +19,64 @@
 #define STBIR_DEFAULT_FILTER_DOWNSAMPLE   STBIR_FILTER_POINT_SAMPLE
 #include <stb_image_resize2.h>
 
-struct TextureInformation textureLoad(enum TextureContainer container, uint8_t* buffer, size_t size) {
-    switch (container) {
-        case DDS:
-            return ddsReadBuffer(buffer);
-        case UE4:
-            return uexpReadBuffer(buffer, size);
-        case UnityAssetBundle: {
-            struct AssetBundle ab = assetBundleParse(buffer); break;
-            // TODO: extract immediate texture2d if only one is available
-        }
-        case FArC: {
-            uint8_t* txpBuffer = farcReadBuffer(buffer);
-            struct TextureArray array = txpReadBuffer(txpBuffer, size);
-            free(txpBuffer);
-            break;
-        }
-        default: break;
-    }
-    return (struct TextureInformation){0};
+/////////////////////////////////////////////////////////////////////////////
+
+void textureLoadImplementationsInit() {
+    ddsRegister();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+struct TextureLoaderImplementation* implementations = NULL;
+size_t implementationCount = 0;
+
+void textureLoadImplementationAdd(struct TextureLoaderImplementation implementation) {
+    if (implementations != NULL) {
+        struct TextureLoaderImplementation* reallocImplementations = realloc(implementations, (implementationCount + 1) * sizeof(struct TextureLoaderImplementation));
+        if (!reallocImplementations) return;
+        implementations = reallocImplementations;
+    } else
+        implementations = malloc((implementationCount + 1) * sizeof(struct TextureLoaderImplementation));
+    memcpy(implementations + implementationCount, &implementation, sizeof(struct TextureLoaderImplementation));
+    implementationCount++;
+}
+struct TextureArray textureLoad(enum TextureContainer container, uint8_t* buffer, size_t size) {
+    for (size_t index = 0; implementationCount > index; index++)
+        if (implementations[index].container == container)
+            return implementations[index].load(buffer, size);
+    for (size_t index = 0; implementationCount > index; index++)
+        if (implementations[index].detect != NULL && implementations[index].detect(buffer, size))
+            return implementations[index].load(buffer, size);
+    return (struct TextureArray){0};
 };
-struct TextureInformation textureResize(struct TextureInformation information, int w, int h) {
-    // TODO: rework
-    if (information.format != RGBA) return (struct TextureInformation){0};
-    struct TextureInformation resizedInformation = {0};
-    resizedInformation.buffer = malloc(w * h * 4);
-    resizedInformation.mustFreeBuffer = true;
-    resizedInformation.width = w;
-    resizedInformation.height = h;
-    resizedInformation.format = RGBA;
+enum TextureContainer textureContainerGetFromString(const char* name) {
+    for (size_t index = 0; implementationCount > index; index++)
+        if (strcmpi(implementations[index].name, name) == 0)
+            return implementations[index].container;
+    return UnknownContainer;
+}
+
+struct TextureInformation* textureResize(struct TextureInformation* information, int w, int h) {
+    if (information->format != RGBA) return information;
+
+    uint8_t* buffer = malloc(w * h * 4);
 
     stbir_resize_uint8_linear(
-        information.buffer,
-        information.width, information.height, information.width * 4,
-        resizedInformation.buffer,
-        w, h, w * 4,
+        information->buffer, information->width, information->height, information->width * 4,
+        buffer, w, h, w * 4,
         STBIR_RGBA
     );
 
-    textureFree(&information);
+    textureFree(information);
+    information->buffer = buffer;
+    information->width = w;
+    information->height = h;
 
-    return resizedInformation;
+    return information;
 }
 
-void textureDecode(struct TextureInformation* information) {
-    if (information->format == UnsupportedEncoding) return;
+struct TextureInformation* textureDecode(struct TextureInformation* information) {
+    if (information->format == UnsupportedEncoding) return NULL;
     uint8_t* rgba = malloc(textureGetSize(information));
     memset(rgba, 255, textureGetSize(information));
     uint8_t* src = information->buffer;
@@ -126,7 +139,9 @@ void textureDecode(struct TextureInformation* information) {
 
     information->format = RGBA;
     information->buffer = rgba;
-    information->mustFreeBuffer = true;
+    information->allocated = true;
+
+    return information;
 };
 bool textureHasAlpha(struct TextureInformation* information) {
     return !(information->format == RGB || information->format == BGR);
@@ -135,22 +150,26 @@ size_t textureGetSize(struct TextureInformation* information) {
     return information->width * information->height * 4;
 };
 void textureFree(struct TextureInformation* information) {
-    if (information->mustFreeBuffer)
+    if (information->allocated)
         free(information->buffer);
 }
 
-IKUYO_EXPORT void textureArrayAdd(struct TextureArray* array, struct TextureInformation* information) {
-    if (array->count > 0) {
-        struct TextureInformation* updatedData = realloc(array->data, (array->count + 1) * sizeof(struct TextureInformation));
-        if (!updatedData) return textureArrayFree(array);
-        array->data = updatedData;
+void textureArrayAdd(struct TextureArray* array, struct TextureInformation* information) {
+    if (array->data != NULL) {
+        struct TextureInformation* allocatedData = realloc(array->data, (array->count + 1) * sizeof(struct TextureInformation));
+        if (!allocatedData) return textureArrayFree(array);
+        array->data = allocatedData;
     } else
-        array->data = malloc(sizeof(struct TextureInformation));
-
+        array->data = (struct TextureInformation*)malloc((array->count + 1) * sizeof(struct TextureInformation));
     memcpy(array->data + array->count, information, sizeof(struct TextureInformation));
     array->count++;
 };
-IKUYO_EXPORT void textureArrayFree(struct TextureArray* array) {
-    free(array->data);
+void textureArrayFree(struct TextureArray* array) {
+    if (array->count > 0)
+        for (size_t index = 0; index < array->count; index++)
+            textureFree(&array->data[index]);
+    if (array->data != NULL)
+        free(array->data);
+    array->data = NULL;
     array->count = 0;
 };

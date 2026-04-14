@@ -6,7 +6,13 @@
 #include <common/bytestream.h>
 #include <format/dds/dds.h>
 
-struct TextureInformation ddsReadBuffer(uint8_t* buffer) {
+bool ddsDetect(uint8_t* buffer, size_t size) {
+    struct Bytestream bytestream = bytestreamInit(buffer);
+    uint32_t magic = bytestreamReadLong(&bytestream, false);
+    return magic == DDS_MAGIC;
+}
+
+struct TextureArray ddsLoad(uint8_t* buffer, size_t size) {
     struct TextureInformation information = {0};
     struct Bytestream bytestream = bytestreamInit(buffer);
 
@@ -41,7 +47,22 @@ struct TextureInformation ddsReadBuffer(uint8_t* buffer) {
     bytestream.offset = 128;
     information.buffer = bytestreamReadPointer(&bytestream);
 
-    return information;
+    if (!textureDecode(&information)) goto DdsLoadFailure;
+
+    struct TextureArray array = {0};
+    textureArrayAdd(&array, &information);
+
+    return array;
 DdsLoadFailure:
-    return (struct TextureInformation){0};
+    return (struct TextureArray){0};
+}
+
+void ddsRegister() {
+    struct TextureLoaderImplementation implementation = {0};
+    implementation.name = "dds";
+    implementation.description = "DirectDraw Surface";
+    implementation.container = DDS;
+    implementation.load = &ddsLoad;
+    implementation.detect = &ddsDetect;
+    textureLoadImplementationAdd(implementation);
 }

@@ -113,7 +113,7 @@ struct TextureArray txpReadBuffer(uint8_t* buffer, size_t size) {
                 information.width = textureInformation.width;
                 information.height = textureInformation.height;
                 information.buffer = rgba;
-                information.mustFreeBuffer = true;
+                information.allocated = true;
 
                 textureArrayAdd(&array, &information);
 

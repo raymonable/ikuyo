@@ -25,7 +25,7 @@ enum TextureContainer {
 
 struct TextureInformation {
     uint8_t* buffer;
-    bool mustFreeBuffer;
+    bool allocated;
 
     int width;
     int height;
@@ -37,27 +37,32 @@ struct TextureInformation {
 };
 
 struct TextureArray {
-    struct TextureInformation* data;
     uint32_t count;
+    struct TextureInformation* data;
 };
 
 struct TextureLoaderImplementation {
     const char* name;
     const char* description;
-    const char* fileExtension;
+    enum TextureContainer container;
+
     bool (*detect)(uint8_t* buffer, size_t size);
     struct TextureArray (*load)(uint8_t* buffer, size_t size);
 };
 
+void textureLoadImplementationsInit();
+
+void textureLoadImplementationAdd(struct TextureLoaderImplementation);
+IKUYO_EXPORT enum TextureContainer textureContainerGetFromString(const char*);
+IKUYO_EXPORT struct TextureArray textureLoad(enum TextureContainer, uint8_t* data, size_t size);
+
 IKUYO_EXPORT void textureArrayAdd(struct TextureArray*, struct TextureInformation*);
 IKUYO_EXPORT void textureArrayFree(struct TextureArray*);
 
-IKUYO_EXPORT void textureDecode(struct TextureInformation*);
+IKUYO_EXPORT struct TextureInformation* textureDecode(struct TextureInformation*);
 IKUYO_EXPORT void textureFree(struct TextureInformation*);
 
-IKUYO_EXPORT struct TextureInformation textureLoad(enum TextureContainer, uint8_t* data, size_t size);
-
-struct TextureInformation textureResize(struct TextureInformation, int w, int h);
+struct TextureInformation* textureResize(struct TextureInformation*, int w, int h);
 
 size_t textureGetSize(struct TextureInformation*);
 bool textureHasAlpha(struct TextureInformation*);
