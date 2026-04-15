@@ -9,7 +9,6 @@
 
 #define FARC_MAGIC 0x46417243
 
-// NOTE: remember to free() the returned buffer!
-uint8_t* farcReadBuffer(uint8_t* buffer);
+void farcRegister();
 
 #endif //IKUYO_FARC_H

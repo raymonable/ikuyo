@@ -134,7 +134,8 @@ int main(int argc, char** argv) {
     fclose(file);
 
     array = textureLoad(textureContainer, buffer, fileSize);
-    if (verbose || array.count == 0) printf("Decoded %i textures\n", array.count);
+    if (verbose) printf("Processed %i textures\n", array.count);
+    if (!array.count) printf("No textures were processed. The file may be corrupt or not match any specific format.");
 
     for (size_t index = 0; array.count > index; index++) {
         if (flags[5].value != NULL && strtoul(flags[5].value, NULL, 10) != index) continue;
@@ -169,7 +170,7 @@ int main(int argc, char** argv) {
             }
             // Append a (%i) if there are multiple images
             if (!flags[5].value && array.count > 1) {
-                sprintf(outputFileName + length, "(%lu)", index + 1);
+                sprintf(outputFileName + length, " (%lu)", index + 1);
                 length = strlen(outputFileName);
             }
             outputFileName[length] = '.';

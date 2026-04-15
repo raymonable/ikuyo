@@ -40,7 +40,23 @@ struct TextureInformation txpGetTextureInformationFromMip(uint8_t* mip) {
     return information;
 }
 
-struct TextureArray txpReadBuffer(uint8_t* buffer, size_t size) {
+bool txpDetect(uint8_t* buffer, size_t size) {
+    struct Bytestream bytestream = bytestreamInit(buffer);
+    uint8_t* bufferOffset = buffer;
+    if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas) {
+        uint32_t headerOffset = bytestreamReadLong(&bytestream, false);
+        if (headerOffset > size) return false;
+
+        bufferOffset += headerOffset;
+        bytestream.data = bufferOffset;
+        bytestream.offset = 0;
+
+        if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas) return false;
+    }
+    return true;
+}
+
+struct TextureArray txpLoad(uint8_t* buffer, size_t size) {
     struct Bytestream bytestream = bytestreamInit(buffer);
 
     // BEGIN: verify contents, both cleaned txp and extracted are supported
@@ -134,3 +150,13 @@ struct TextureArray txpReadBuffer(uint8_t* buffer, size_t size) {
 TxpLoadFailure:
     return (struct TextureArray){0};
 };
+
+void txpRegister() {
+    struct TextureLoaderImplementation implementation = {0};
+    implementation.name = "txp";
+    implementation.description = "Project DIVA Arcade Future Tone Texture Format";
+    implementation.container = PDAFT_TXP;
+    implementation.load = &txpLoad;
+    implementation.detect = &txpDetect;
+    textureLoadImplementationAdd(implementation);
+}

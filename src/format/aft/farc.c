@@ -3,11 +3,14 @@
 //
 
 #include <format/aft/farc.h>
+#include <format/aft/txp.h>
+
+#include <common/texture.h>
 #include <common/bytestream.h>
 
 #include <libdeflate.h>
 
-uint8_t* farcReadBuffer(uint8_t* buffer) {
+uint8_t* farcAccess(uint8_t* buffer, size_t* size) {
     struct Bytestream bytestream = bytestreamInit(buffer);
 
     if (bytestreamReadLong(&bytestream, true) != FARC_MAGIC) goto FarcLoadFailure;
@@ -37,8 +40,36 @@ uint8_t* farcReadBuffer(uint8_t* buffer) {
     libdeflate_free_decompressor(decompressor);
 
     if (result != LIBDEFLATE_SUCCESS) goto FarcLoadFailure;
+    if (size != NULL) *size = decompressedBytes;
 
     return decompressedBuffer;
+FarcLoadFailure: return NULL;
+}
+
+bool farcDetect(uint8_t* buffer, size_t size) {
+    struct Bytestream bytestream = bytestreamInit(buffer);
+    return bytestreamReadLong(&bytestream, true) == FARC_MAGIC;
+}
+
+struct TextureArray farcLoad(uint8_t* buffer, size_t size) {
+    struct TextureArray array = {0};
+
+    size_t farcSize = 0;
+    uint8_t* farc = farcAccess(buffer, &farcSize);
+    if (!farc) goto FarcLoadFailure;
+
+    array = txpLoad(farc, farcSize);
 FarcLoadFailure:
-    return NULL;
+    free(farc);
+    return array;
+}
+
+void farcRegister() {
+    struct TextureLoaderImplementation implementation = {0};
+    implementation.name = "farc";
+    implementation.description = "Project DIVA Arcade Future Tone Package Format";
+    implementation.container = PDAFT_FArC;
+    implementation.load = &farcLoad;
+    implementation.detect = &farcDetect;
+    textureLoadImplementationAdd(implementation);
 }
