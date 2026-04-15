@@ -8,6 +8,6 @@
 #include <ikuyo.h>
 #include <common/texture.h>
 
-struct TextureInformation uexpReadBuffer(uint8_t*, size_t);
+void uexpRegister();
 
 #endif //IKUYO_UEXP_H

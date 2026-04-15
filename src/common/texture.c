@@ -25,6 +25,7 @@ void textureLoadImplementationsInit() {
     ddsRegister();
     txpRegister();
     farcRegister();
+    uexpRegister(); // NOTE: this MUST be placed at the end, the detection is ass
 }
 
 /////////////////////////////////////////////////////////////////////////////
