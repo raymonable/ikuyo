@@ -21,12 +21,11 @@ void imageBufferFree(struct ImageBuffer imageBuffer) {
         free(imageBuffer.buffer);
 };
 
-struct ImageBuffer webpGenerate(struct TextureInformation information) {
+struct ImageBuffer webpGenerate(struct TextureInformation information, int preferredQuality) {
     WebPPicture picture = {0};
     WebPConfig config = {0};
 
-    // TODO: add configurable settings for lossless and resize modes
-    if (!WebPConfigPreset(&config, WEBP_PRESET_ICON, 75)) goto WebpError;
+    if (!WebPConfigPreset(&config, WEBP_PRESET_ICON, (float)preferredQuality)) goto WebpError;
     if (!WebPValidateConfig(&config)) goto WebpError;
 
     picture.width = information.width;
@@ -58,7 +57,7 @@ WebpError:
     return (struct ImageBuffer){0};
 };
 
-struct ImageBuffer avifGenerate(struct TextureInformation information) {
+struct ImageBuffer avifGenerate(struct TextureInformation information, int preferredQuality) {
     avifRWData avifOutput = AVIF_DATA_EMPTY;
     avifRGBImage rgb = {0};
 
@@ -78,7 +77,7 @@ struct ImageBuffer avifGenerate(struct TextureInformation information) {
     avifEncoder* encoder = avifEncoderCreate();
     if (!encoder) goto AvifError;
 
-    encoder->quality = 50;
+    encoder->quality = preferredQuality;
     encoder->qualityAlpha = AVIF_QUALITY_BEST;
 
     if (avifEncoderAddImage(encoder, image, 1, AVIF_ADD_IMAGE_FLAG_SINGLE) != AVIF_RESULT_OK) goto AvifError;
@@ -96,11 +95,11 @@ AvifError:
     return (struct ImageBuffer){0};
 }
 
-struct ImageBuffer imageGenerate(enum ImageContainer type, struct TextureInformation information) {
+struct ImageBuffer imageGenerate(enum ImageContainer type, struct TextureInformation information, int preferredQuality) {
     switch (type) {
         case PNG: return pngGenerate(information);
-        case WebP: return webpGenerate(information);
-        case AVIF: return avifGenerate(information);
+        case WebP: return webpGenerate(information, preferredQuality);
+        case AVIF: return avifGenerate(information, preferredQuality);
         default: break;
     }
     return (struct ImageBuffer){0};

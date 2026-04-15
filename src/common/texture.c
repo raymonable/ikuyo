@@ -70,7 +70,9 @@ struct TextureInformation* textureResize(struct TextureInformation* information,
     );
 
     textureFree(information);
+
     information->buffer = buffer;
+    information->allocated = true;
     information->width = w;
     information->height = h;
 
@@ -152,8 +154,11 @@ size_t textureGetSize(struct TextureInformation* information) {
     return information->width * information->height * 4;
 };
 void textureFree(struct TextureInformation* information) {
-    if (information->allocated)
+    if (information->allocated && information->buffer != NULL) {
         free(information->buffer);
+        information->buffer = NULL;
+        information->allocated = false;
+    }
 }
 
 void textureArrayAdd(struct TextureArray* array, struct TextureInformation* information) {

@@ -15,11 +15,10 @@ bool assetBundleDecompress(enum AssetBundleCompression type, uint8_t* input, siz
          // TODO: LZMA
         case AssetBundleLZ4HC:
         case AssetBundleLZ4:
-            int result = LZ4_decompress_safe(
+            return LZ4_decompress_safe(
                 (char*)input, (char*)output,
                 inputSize, outputSize
-            );
-            return result > 0;
+            ) > 0;
         default: break;
     }
     return true;

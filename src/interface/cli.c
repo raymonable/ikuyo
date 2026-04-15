@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
         { {"f", "format"}, NULL, "Specifies the format to output files in.", AcceptsString },
         { {"o", "output"}, NULL, "Specifies the output file name.", AcceptsString },
         { {"s", "select"}, NULL, "Selects a specific image index if available.", AcceptsString },
-        { {"q", "quality"}, NULL, "Percentage (1 to 100) to prefer quality (excludes `png` format).", AcceptsString }
+        { {"q", "quality"}, NULL, "Percentage (1 to 100) to prefer quality (excludes `png` format).", AcceptsString },
+        { {"r", "resolution"}, NULL, "Resizes the output image(s) to a specific resolution (ex: 250x250)", AcceptsString }
     };
 
     // NOTE: use `individualArguments` and `argumentCount` instead of `argv` and `argc`
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
         }
         argumentIndex++;
     }
-    if (flags[0].value || argumentCount <= 0) {
+    if (flags[0].value || argumentCount <= 0 || !individualArguments) {
 #ifdef WIN32
         const char* executable = strrchr(argv[0], '\\');
 #else
@@ -107,16 +108,21 @@ int main(int argc, char** argv) {
     const bool verbose = flags[1].value != NULL;
     enum TextureContainer textureContainer = UnknownContainer;
     enum ImageContainer imageContainer = PNG;
+    int preferredQuality = 75; // 75% is ideal for WebP, 50% works well with AVIF
 
     if (flags[2].value != NULL) {
         textureContainer = textureContainerGetFromString(flags[2].value);
         if (verbose) printf("Specific input format %s requested\n", flags[2].value);
-    } else if (verbose) printf("No input format specified\n");
+    } else if (verbose) printf("No input format specified, detecting automatically\n");
 
     if (flags[3].value != NULL) {
         if (strcmpi(flags[3].value, "webp") == 0) imageContainer = WebP;
         if (strcmpi(flags[3].value, "avif") == 0) imageContainer = AVIF;
     }
+
+    if (flags[6].value != NULL)
+        preferredQuality = (int)strtol(flags[6].value, NULL, 10);
+    if (imageContainer != PNG && verbose) printf("Compressing output image to %i%%\n", preferredQuality);
 
     // BEGIN: read file
     const char* fileName = individualArguments[0];
@@ -139,22 +145,39 @@ int main(int argc, char** argv) {
 
     for (size_t index = 0; array.count > index; index++) {
         if (flags[5].value != NULL && strtoul(flags[5].value, NULL, 10) != index) continue;
+
+        if (flags[7].value != NULL) {
+            // BEGIN: get individual pieces of resolution string & scale
+            char* resolutionString = malloc(strlen(flags[7].value));
+            memcpy(resolutionString, flags[7].value, strlen(flags[7].value));
+            uint32_t resolutionDivision = 0;
+            while (resolutionString[resolutionDivision] != 'x' && resolutionString[resolutionDivision] != '*' &&
+                resolutionString[resolutionDivision] != '/' && resolutionDivision < strlen(flags[7].value))
+                    resolutionDivision++;
+            if (resolutionDivision >= strlen(flags[7].value) || !resolutionDivision) goto ResolutionResizeEnd;
+            resolutionString[resolutionDivision] = 0;
+
+            int w = (int)strtol(resolutionString, NULL, 10);
+            int h = (int)strtol(resolutionString + resolutionDivision + 1, NULL, 10);
+            if (w < 0 && h < 0) goto ResolutionResizeEnd;
+
+            struct TextureInformation* informationPtr = array.data + (index * sizeof(struct TextureInformation));
+
+            // TODO: fix lol
+            if (w < 0) w = (informationPtr->height / informationPtr->width) * h;
+            if (h < 0) h = (informationPtr->width / informationPtr->height) * w;
+
+            textureResize(array.data + (index * sizeof(struct TextureInformation)), w, h);
+ResolutionResizeEnd:
+            free(resolutionString);
+        }
+
         struct TextureInformation information = array.data[index];
         if (information.format != RGBA) {
             fprintf(stderr, "Decoder didn't provide RGBA, exiting\n");
             goto CommandLineEnd;
         }
-        struct ImageBuffer imageBuffer = {0};
-        switch (imageContainer) {
-            case PNG: { imageBuffer = pngGenerate(information); break; }
-            // TODO: handle compression value
-            case WebP: { imageBuffer = webpGenerate(information); break; }
-            // TODO: handle compression value
-            case AVIF: { imageBuffer = avifGenerate(information); break; }
-            default:
-                fprintf(stderr, "Unknown output format, exiting\n");
-                goto CommandLineEnd;
-        }
+        const struct ImageBuffer imageBuffer = imageGenerate(imageContainer, information, preferredQuality);
         if (imageBuffer.buffer != NULL) {
             char outputFileName[128] = {0};
             uint32_t length = strlen(fileName);
@@ -185,7 +208,10 @@ int main(int argc, char** argv) {
             file = fopen(outputFileName, "wb");
             fwrite(imageBuffer.buffer, imageBuffer.size, 1, file);
             fclose(file);
+
+            if (verbose) printf("Exported texture %lu to %s\n", index + 1, outputFileName);
         }
+        imageBufferFree(imageBuffer);
     }
 
 CommandLineEnd:

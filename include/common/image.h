@@ -21,10 +21,10 @@ struct ImageBuffer {
 struct ImageBuffer imageBufferInit(enum ImageContainer, uint8_t* data, size_t size);
 IKUYO_EXPORT void imageBufferFree(struct ImageBuffer);
 
-struct ImageBuffer avifGenerate(struct TextureInformation);
-struct ImageBuffer webpGenerate(struct TextureInformation);
+struct ImageBuffer avifGenerate(struct TextureInformation, int preferredQuality);
+struct ImageBuffer webpGenerate(struct TextureInformation, int preferredQuality);
 struct ImageBuffer pngGenerate(struct TextureInformation); // NOTE: handled by bridge
 
-IKUYO_EXPORT struct ImageBuffer imageGenerate(enum ImageContainer, struct TextureInformation);
+IKUYO_EXPORT struct ImageBuffer imageGenerate(enum ImageContainer, struct TextureInformation, int preferredQuality);
 
 #endif //IKUYO_IMAGE_H

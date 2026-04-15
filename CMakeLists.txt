@@ -70,6 +70,7 @@ add_subdirectory(external/libwebp)
 set(AVIF_LIBYUV OFF)
 set(AVIF_CODEC_LIBGAV1 "LOCAL")
 set(AVIF_CODEC_SVT "LOCAL")
+set(LOG_QUIET ON)
 set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like additional optimizations
 
 add_subdirectory(external/libavif)
