@@ -152,8 +152,9 @@ int main(int argc, char** argv) {
     fclose(file);
 
     array = textureLoad(&implementations, textureContainer, buffer, fileSize);
-    if (verbose) printf("Processed %i textures\n", array.count);
-    if (!array.count) printf("No textures were processed. The file may be corrupt or not match any specific format.");
+    if (!array.count) {
+        printf("No textures were processed. The file may be corrupt or not match any specific format.");
+    } else if (verbose) printf("Processed %i textures\n", array.count);
 
     for (size_t index = 0; array.count > index; index++) {
         if (flags[5].value != NULL && strtoul(flags[5].value, NULL, 10) != index) continue;
@@ -173,13 +174,13 @@ int main(int argc, char** argv) {
             int h = (int)strtol(resolutionString + resolutionDivision + 1, NULL, 10);
             if (w <= 0 && h <= 0) goto ResolutionResizeEnd;
 
-            struct TextureInformation* informationPtr = array.data + (index * sizeof(struct TextureInformation));
+            struct TextureInformation* informationPtr = array.data + index;
 
             // TODO: fix lol
             if (w <= 0) w = (int)(((float)informationPtr->width / (float)informationPtr->height) * (float)h);
             if (h <= 0) h = (int)(((float)informationPtr->height / (float)informationPtr->width) * (float)w);
 
-            textureResize(array.data + (index * sizeof(struct TextureInformation)), w, h);
+            textureResize(array.data + index, w, h);
 ResolutionResizeEnd:
             free(resolutionString);
         }
