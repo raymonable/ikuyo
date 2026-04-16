@@ -14,6 +14,6 @@
 #define FORMAT_DXT3_MAGIC 0x33545844
 #define FORMAT_DXT5_MAGIC 0x35545844
 
-void ddsRegister();
+void ddsRegister(struct TextureLoaderImplementations* implementations);
 
 #endif //IKUYO_DDS_H

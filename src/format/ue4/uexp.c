@@ -55,12 +55,12 @@ bool uexpDetect(uint8_t* buffer, size_t size) {
     return bytestreamReadLong(&bytestream, true) == 0x8000000;
 }
 
-void uexpRegister() {
+void uexpRegister(struct TextureLoaderImplementations* implementations) {
     struct TextureLoaderImplementation implementation = {0};
     implementation.name = "uexp";
     implementation.description = "Unreal Engine 4 Texture Resource (4.19.2)";
     implementation.container = UE4;
     implementation.load = &uexpLoad;
     implementation.detect = &uexpDetect;
-    textureLoadImplementationAdd(implementation);
+    textureLoadImplementationAdd(implementations, implementation);
 }

@@ -8,6 +8,10 @@
 
 #include <stdio.h>
 
+#ifndef WIN32
+    #define fopen_s(a,b,c) *(a) = fopen(b,c)
+#endif
+
 enum CommandLineFlagType {
     AcceptsNone,
     AcceptsBoolean,
@@ -21,9 +25,11 @@ struct CommandLineFlag {
 int main(int argc, char** argv) {
     FILE* file = NULL;
     uint8_t* buffer = NULL;
-    struct TextureArray array = {0};
 
-    textureLoadImplementationsInit();
+    struct TextureArray array = {0};
+    struct TextureLoaderImplementations implementations = {0};
+
+    textureLoadImplementationsInit(&implementations);
 
     struct CommandLineFlag flags[] = {
         { {"h", "help"}, NULL, "Displays this help message.", AcceptsNone },
@@ -92,13 +98,17 @@ int main(int argc, char** argv) {
         printf("Options:\n");
 
         for (uint32_t index = 0; index < sizeof(flags) / sizeof(struct CommandLineFlag); index++) {
-            char flagPrefix[20] = {0};
+            char flagPrefix[24] = {0};
             snprintf(flagPrefix, sizeof(flagPrefix), " * -%s (--%s):",  flags[index].name[0], flags[index].name[1]);
             printf("%s", flagPrefix);
             for (uint32_t stringIndex = strlen(flagPrefix); sizeof(flagPrefix) > stringIndex; stringIndex++)
                 printf(" ");
             printf("%s\n", flags[index].description);
         }
+
+        printf("\nTexture Formats:\n");
+        for (uint32_t index = 0; index < implementations.count; index++)
+            printf("* %s (%s)\n", implementations.data[index].name, implementations.data[index].description);
 
         goto CommandLineEnd;
     }
@@ -111,7 +121,9 @@ int main(int argc, char** argv) {
     int preferredQuality = 75; // 75% is ideal for WebP, 50% works well with AVIF
 
     if (flags[2].value != NULL) {
-        textureContainer = textureContainerGetFromString(flags[2].value);
+        for (size_t index = 0; implementations.count > index; index++)
+            if (strcmpi(implementations.data[index].name, flags[2].value) == 0)
+                textureContainer = implementations.data[index].container;
         if (verbose) printf("Specific input format %s requested\n", flags[2].value);
     } else if (verbose) printf("No input format specified, detecting automatically\n");
 
@@ -126,7 +138,7 @@ int main(int argc, char** argv) {
 
     // BEGIN: read file
     const char* fileName = individualArguments[0];
-    file = fopen(fileName, "rb");
+    fopen_s(&file, fileName, "rb");
     if (!file) {
         fprintf(stderr, "Unable to open file %s\n", individualArguments[0]);
         goto CommandLineEnd;
@@ -139,7 +151,7 @@ int main(int argc, char** argv) {
     fread(buffer, fileSize, 1, file);
     fclose(file);
 
-    array = textureLoad(textureContainer, buffer, fileSize);
+    array = textureLoad(&implementations, textureContainer, buffer, fileSize);
     if (verbose) printf("Processed %i textures\n", array.count);
     if (!array.count) printf("No textures were processed. The file may be corrupt or not match any specific format.");
 
@@ -159,13 +171,13 @@ int main(int argc, char** argv) {
 
             int w = (int)strtol(resolutionString, NULL, 10);
             int h = (int)strtol(resolutionString + resolutionDivision + 1, NULL, 10);
-            if (w < 0 && h < 0) goto ResolutionResizeEnd;
+            if (w <= 0 && h <= 0) goto ResolutionResizeEnd;
 
             struct TextureInformation* informationPtr = array.data + (index * sizeof(struct TextureInformation));
 
             // TODO: fix lol
-            if (w < 0) w = (informationPtr->height / informationPtr->width) * h;
-            if (h < 0) h = (informationPtr->width / informationPtr->height) * w;
+            if (w <= 0) w = (int)(((float)informationPtr->width / (float)informationPtr->height) * (float)h);
+            if (h <= 0) h = (int)(((float)informationPtr->height / (float)informationPtr->width) * (float)w);
 
             textureResize(array.data + (index * sizeof(struct TextureInformation)), w, h);
 ResolutionResizeEnd:
@@ -193,7 +205,7 @@ ResolutionResizeEnd:
             }
             // Append a (%i) if there are multiple images
             if (!flags[5].value && array.count > 1) {
-                sprintf(outputFileName + length, " (%lu)", index + 1);
+                snprintf(outputFileName + length, 128 - length, " (%llu)", index + 1);
                 length = strlen(outputFileName);
             }
             outputFileName[length] = '.';
@@ -205,11 +217,11 @@ ResolutionResizeEnd:
                 default: break;
             }
 
-            file = fopen(outputFileName, "wb");
+            fopen_s(&file, outputFileName, "wb");
             fwrite(imageBuffer.buffer, imageBuffer.size, 1, file);
             fclose(file);
 
-            if (verbose) printf("Exported texture %lu to %s\n", index + 1, outputFileName);
+            if (verbose) printf("Exported texture %llu to %s\n", index + 1, outputFileName);
         }
         imageBufferFree(imageBuffer);
     }
@@ -217,11 +229,13 @@ ResolutionResizeEnd:
 CommandLineEnd:
 
     textureArrayFree(&array);
+    textureLoadImplementationsFree(&implementations);
 
     free(individualArguments);
 
     free(buffer);
-    fclose(file);
+    if (file != NULL)
+        fclose(file);
 
     return 0;
 }

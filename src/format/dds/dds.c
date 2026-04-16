@@ -57,12 +57,12 @@ DdsLoadFailure:
     return (struct TextureArray){0};
 }
 
-void ddsRegister() {
+void ddsRegister(struct TextureLoaderImplementations* implementations) {
     struct TextureLoaderImplementation implementation = {0};
     implementation.name = "dds";
     implementation.description = "DirectDraw Surface";
     implementation.container = DDS;
     implementation.load = &ddsLoad;
     implementation.detect = &ddsDetect;
-    textureLoadImplementationAdd(implementation);
+    textureLoadImplementationAdd(implementations, implementation);
 }

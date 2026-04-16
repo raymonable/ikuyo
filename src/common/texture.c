@@ -21,43 +21,41 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-void textureLoadImplementationsInit() {
-    ddsRegister();
-    txpRegister();
-    farcRegister();
-    uexpRegister(); // NOTE: this MUST be placed at the end, the detection is ass
+void textureLoadImplementationsInit(struct TextureLoaderImplementations* implementations) {
+    ddsRegister(implementations);
+    txpRegister(implementations);
+    farcRegister(implementations);
+    uexpRegister(implementations); // NOTE: this MUST be placed at the end, the detection is ass
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct TextureLoaderImplementation* implementations = NULL;
-size_t implementationCount = 0;
-
-void textureLoadImplementationAdd(struct TextureLoaderImplementation implementation) {
-    if (implementations != NULL) {
-        struct TextureLoaderImplementation* reallocImplementations = realloc(implementations, (implementationCount + 1) * sizeof(struct TextureLoaderImplementation));
+void textureLoadImplementationAdd(struct TextureLoaderImplementations* implementations, struct TextureLoaderImplementation implementation) {
+    if (implementations->data != NULL) {
+        struct TextureLoaderImplementation* reallocImplementations = realloc(implementations->data, (implementations->count + 1) * sizeof(struct TextureLoaderImplementation));
         if (!reallocImplementations) return;
-        implementations = reallocImplementations;
+        implementations->data = reallocImplementations;
     } else
-        implementations = malloc((implementationCount + 1) * sizeof(struct TextureLoaderImplementation));
-    memcpy(implementations + implementationCount, &implementation, sizeof(struct TextureLoaderImplementation));
-    implementationCount++;
+        implementations->data = malloc((implementations->count + 1) * sizeof(struct TextureLoaderImplementation));
+    memcpy(implementations->data + implementations->count, &implementation, sizeof(struct TextureLoaderImplementation));
+    implementations->count++;
 }
-struct TextureArray textureLoad(enum TextureContainer container, uint8_t* buffer, size_t size) {
-    for (size_t index = 0; implementationCount > index; index++)
-        if (implementations[index].container == container)
-            return implementations[index].load(buffer, size);
-    for (size_t index = 0; implementationCount > index; index++)
-        if (implementations[index].detect != NULL && implementations[index].detect(buffer, size))
-            return implementations[index].load(buffer, size);
+void textureLoadImplementationsFree(struct TextureLoaderImplementations* implementations) {
+    if (implementations->data != NULL)
+        free(implementations->data);
+    implementations->data = NULL;
+    implementations->count = 0;
+}
+
+struct TextureArray textureLoad(struct TextureLoaderImplementations* implementations, enum TextureContainer container, uint8_t* buffer, size_t size) {
+    for (size_t index = 0; implementations->count > index; index++)
+        if (implementations->data[index].container == container)
+            return implementations->data[index].load(buffer, size);
+    for (size_t index = 0; implementations->count > index; index++)
+        if (implementations->data[index].detect != NULL && implementations->data[index].detect(buffer, size))
+            return implementations->data[index].load(buffer, size);
     return (struct TextureArray){0};
 };
-enum TextureContainer textureContainerGetFromString(const char* name) {
-    for (size_t index = 0; implementationCount > index; index++)
-        if (strcmpi(implementations[index].name, name) == 0)
-            return implementations[index].container;
-    return UnknownContainer;
-}
 
 struct TextureInformation* textureResize(struct TextureInformation* information, int w, int h) {
     if (information->format != RGBA) return information;
@@ -155,17 +153,16 @@ size_t textureGetSize(struct TextureInformation* information) {
     return information->width * information->height * 4;
 };
 void textureFree(struct TextureInformation* information) {
-    if (information->allocated && information->buffer != NULL) {
+    if (information->allocated && information->buffer != NULL)
         free(information->buffer);
-        information->buffer = NULL;
-        information->allocated = false;
-    }
+    information->buffer = NULL;
+    information->allocated = false;
 }
 
 void textureArrayAdd(struct TextureArray* array, struct TextureInformation* information) {
     if (array->data != NULL) {
         struct TextureInformation* allocatedData = realloc(array->data, (array->count + 1) * sizeof(struct TextureInformation));
-        if (!allocatedData) return textureArrayFree(array);
+        if (!allocatedData) return; // NOTE: we are fucked at this point
         array->data = allocatedData;
     } else
         array->data = (struct TextureInformation*)malloc((array->count + 1) * sizeof(struct TextureInformation));

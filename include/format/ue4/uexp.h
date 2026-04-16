@@ -8,6 +8,6 @@
 #include <ikuyo.h>
 #include <common/texture.h>
 
-void uexpRegister();
+void uexpRegister(struct TextureLoaderImplementations* implementations);
 
 #endif //IKUYO_UEXP_H

@@ -14,7 +14,7 @@ enum TxpMagicType {
     TxpMagicTexture = 4,
 };
 
-void txpRegister();
-struct TextureArray txpLoad(uint8_t*, size_t);
+void txpRegister(struct TextureLoaderImplementations* implementations);
+struct TextureArray txpLoad(uint8_t *, size_t); // NOTE: exported for farc package
 
 #endif //IKUYO_TXP_H

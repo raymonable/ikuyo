@@ -64,12 +64,12 @@ FarcLoadFailure:
     return array;
 }
 
-void farcRegister() {
+void farcRegister(struct TextureLoaderImplementations* implementations) {
     struct TextureLoaderImplementation implementation = {0};
     implementation.name = "farc";
     implementation.description = "Project DIVA Arcade Future Tone Package Format";
     implementation.container = PDAFT_FArC;
     implementation.load = &farcLoad;
     implementation.detect = &farcDetect;
-    textureLoadImplementationAdd(implementation);
+    textureLoadImplementationAdd(implementations, implementation);
 }

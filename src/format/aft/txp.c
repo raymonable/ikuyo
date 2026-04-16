@@ -151,12 +151,12 @@ TxpLoadFailure:
     return (struct TextureArray){0};
 };
 
-void txpRegister() {
+void txpRegister(struct TextureLoaderImplementations* implementations) {
     struct TextureLoaderImplementation implementation = {0};
     implementation.name = "txp";
     implementation.description = "Project DIVA Arcade Future Tone Texture Format";
     implementation.container = PDAFT_TXP;
     implementation.load = &txpLoad;
     implementation.detect = &txpDetect;
-    textureLoadImplementationAdd(implementation);
+    textureLoadImplementationAdd(implementations, implementation);
 }

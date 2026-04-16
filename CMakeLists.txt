@@ -70,17 +70,27 @@ add_subdirectory(external/libwebp)
 set(AVIF_LIBYUV OFF)
 set(AVIF_CODEC_LIBGAV1 "LOCAL")
 set(AVIF_CODEC_SVT "LOCAL")
-set(LOG_QUIET ON)
+
+if (NOT MSVC)
+    message(STATUS "MSVC has issues with SV1-AV1, logging will be forcefully enabled")
+    set(LOG_QUIET ON)
+endif()
+
+find_program(NASM_EXECUTABLE nasm)
 set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like additional optimizations
+if (NASM_EXECUTABLE)
+    message(STATUS "NASM is available, will enable assembly optimizations")
+    set(COMPILE_C_ONLY OFF)
+endif()
 
 add_subdirectory(external/libavif)
 
 # LZ4 / libdeflate
 
-set(LIBDEFLATE_BUILD_STATIC_LIB ON)
-set(LIBDEFLATE_BUILD_SHARED_LIB OFF)
-set(LIBDEFLATE_USE_SHARED_LIB OFF)
-set(LIBDEFLATE_BUILD_TESTS OFF)
+set(LIBDEFLATE_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
+set(LIBDEFLATE_BUILD_SHARED_LIB OFF CACHE BOOL "" FORCE)
+set(LIBDEFLATE_USE_SHARED_LIB OFF CACHE BOOL "" FORCE)
+set(LIBDEFLATE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(external/lz4/build/cmake)
 add_subdirectory(external/libdeflate)

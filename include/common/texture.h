@@ -28,8 +28,8 @@ struct TextureInformation {
     uint8_t* buffer;
     bool allocated;
 
-    int width;
-    int height;
+    uint32_t width;
+    uint32_t height;
 
     bool requiresTransformation;
 
@@ -50,12 +50,16 @@ struct TextureLoaderImplementation {
     bool (*detect)(uint8_t* buffer, size_t size);
     struct TextureArray (*load)(uint8_t* buffer, size_t size);
 };
+struct TextureLoaderImplementations {
+    struct TextureLoaderImplementation* data;
+    uint32_t count;
+};
 
-void textureLoadImplementationsInit();
+IKUYO_EXPORT void textureLoadImplementationsInit(struct TextureLoaderImplementations*);
+IKUYO_EXPORT void textureLoadImplementationsFree(struct TextureLoaderImplementations*);
 
-void textureLoadImplementationAdd(struct TextureLoaderImplementation);
-IKUYO_EXPORT enum TextureContainer textureContainerGetFromString(const char*);
-IKUYO_EXPORT struct TextureArray textureLoad(enum TextureContainer, uint8_t* data, size_t size);
+void textureLoadImplementationAdd(struct TextureLoaderImplementations*, struct TextureLoaderImplementation);
+IKUYO_EXPORT struct TextureArray textureLoad(struct TextureLoaderImplementations*, enum TextureContainer, uint8_t* data, size_t size);
 
 IKUYO_EXPORT void textureArrayAdd(struct TextureArray*, struct TextureInformation*);
 IKUYO_EXPORT void textureArrayFree(struct TextureArray*);

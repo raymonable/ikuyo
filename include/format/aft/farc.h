@@ -9,6 +9,6 @@
 
 #define FARC_MAGIC 0x46417243
 
-void farcRegister();
+void farcRegister(struct TextureLoaderImplementations* implementations);
 
 #endif //IKUYO_FARC_H
