@@ -5,7 +5,9 @@
 #ifndef IKUYO_TXP_H
 #define IKUYO_TXP_H
 
+#include <ikuyo.h>
 #include <common/texture.h>
+
 #define TXP_MAGIC 0x54585000
 
 enum TxpMagicType {

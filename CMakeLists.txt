@@ -78,10 +78,6 @@ endif()
 
 find_program(NASM_EXECUTABLE nasm)
 set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like additional optimizations
-if (NASM_EXECUTABLE)
-    message(STATUS "NASM is available, will enable assembly optimizations")
-    set(COMPILE_C_ONLY OFF)
-endif()
 
 add_subdirectory(external/libavif)
 

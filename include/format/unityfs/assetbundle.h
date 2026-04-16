@@ -6,6 +6,7 @@
 #define IKUYO_UNITY_H
 
 #include <ikuyo.h>
+#include <common/texture.h>
 
 enum AssetBundleCompression {
     AssetBundleNoCompression,
