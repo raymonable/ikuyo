@@ -15,8 +15,7 @@ set(IKUYO_LIBRARIES
 )
 
 include_directories(include external/bcdec external/stb external/libdeflate)
-add_library(ikuyo SHARED
-        # TODO: export a shared library interface
+add_library(ikuyo STATIC
         src/common/bytestream.c
         src/common/texture.c
         src/common/image.c
@@ -27,19 +26,41 @@ add_library(ikuyo SHARED
 
         src/format/aft/farc.c
         src/format/aft/txp.c
+        src/interface/jni.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES PDB_NAME "ikuyo-lib")
 
-add_executable(ikuyo_cli
-        $<TARGET_OBJECTS:ikuyo>
-        src/interface/cli.c
-)
-target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES})
+# Command-line Interface
+
+add_executable(ikuyo_cli src/interface/cli.c)
+target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES} ikuyo)
 set_target_properties(ikuyo_cli PROPERTIES
         OUTPUT_NAME "ikuyo"
         PDB_NAME "ikuyo-cli"
 )
+
+# Java Native Interface
+
+option(IKUYO_JNI "Enable building of Ikuyo's JNI interface" ON)
+if (IKUYO_JNI)
+    set(JAVA_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
+    set(JAVA_AWT_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
+    find_package(JNI)
+    if (JNI_FOUND)
+        add_library(ikuyo_jni src/interface/jni.c)
+        target_link_libraries(ikuyo_jni PUBLIC
+                ${IKUYO_LIBRARIES}
+                ikuyo JNI::JNI
+        )
+        set_target_properties(ikuyo_jni PROPERTIES
+                OUTPUT_NAME "ikuyo-jni"
+                PDB_NAME "ikuyo-jni"
+        )
+    else()
+        message(WARNING "JDK not found, not building Ikuyo JNI")
+    endif()
+endif()
 
 # WebAssembly configuration
 
