@@ -26,15 +26,14 @@ add_library(ikuyo STATIC
 
         src/format/aft/farc.c
         src/format/aft/txp.c
-        src/interface/jni.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
-set_target_properties(ikuyo PROPERTIES PDB_NAME "ikuyo-lib")
+set_target_properties(ikuyo PROPERTIES OUTPUT_NAME "ikuyo-lib")
 
 # Command-line Interface
 
-add_executable(ikuyo_cli src/interface/cli.c)
-target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES} ikuyo)
+add_executable(ikuyo_cli src/interface/cli.c $<TARGET_OBJECTS:ikuyo>)
+target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo_cli PROPERTIES
         OUTPUT_NAME "ikuyo"
         PDB_NAME "ikuyo-cli"
@@ -48,11 +47,9 @@ if (IKUYO_JNI)
     set(JAVA_AWT_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
     find_package(JNI)
     if (JNI_FOUND)
-        add_library(ikuyo_jni src/interface/jni.c)
-        target_link_libraries(ikuyo_jni PUBLIC
-                ${IKUYO_LIBRARIES}
-                ikuyo JNI::JNI
-        )
+        add_library(ikuyo_jni SHARED src/interface/jni.c $<TARGET_OBJECTS:ikuyo>)
+        target_include_directories(ikuyo_jni PRIVATE ${JNI_INCLUDE_DIRS})
+        target_link_libraries(ikuyo_jni PRIVATE ${IKUYO_LIBRARIES} JNI::JNI)
         set_target_properties(ikuyo_jni PROPERTIES
                 OUTPUT_NAME "ikuyo-jni"
                 PDB_NAME "ikuyo-jni"

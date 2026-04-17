@@ -8,6 +8,6 @@
 #include <jni.h>
 #include <stdio.h>
 
-JNIEXPORT void JNICALL Java_main_Ikuyo_init() {
+JNIEXPORT void JNICALL Java_ikuyo_Ikuyo_init() {
     printf("hopping dick dick dick\n");
 }
