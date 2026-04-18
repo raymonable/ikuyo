@@ -129,7 +129,6 @@ int main(int argc, char** argv) {
 
     if (flags[3].value != NULL) {
         if (strcmpi(flags[3].value, "webp") == 0) imageContainer = WebP;
-        if (strcmpi(flags[3].value, "avif") == 0) imageContainer = AVIF;
     }
 
     if (flags[6].value != NULL)
