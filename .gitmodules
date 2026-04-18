@@ -16,9 +16,6 @@
 [submodule "external/lz4"]
 	path = external/lz4
 	url = https://github.com/lz4/lz4
-[submodule "external/libavif"]
-	path = external/libavif
-	url = https://github.com/AOMediaCodec/libavif
 [submodule "external/libdeflate"]
 	path = external/libdeflate
 	url = https://github.com/ebiggers/libdeflate

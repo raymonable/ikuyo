@@ -8,11 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # NOTE: required for Linux builds
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-set(IKUYO_LIBRARIES
-    webp avif
-    lz4 libdeflate_static
-    ikuyo_bridge
-)
+set(IKUYO_LIBRARIES webp lz4 libdeflate_static ikuyo_bridge)
 
 include_directories(include external/bcdec external/stb external/libdeflate)
 add_library(ikuyo STATIC
@@ -96,20 +92,6 @@ set(WEBP_BUILD_EXTRAS OFF)
 set(WEBP_BUILD_TESTS OFF)
 
 add_subdirectory(external/libwebp)
-
-set(AVIF_LIBYUV OFF)
-set(AVIF_CODEC_LIBGAV1 "LOCAL")
-set(AVIF_CODEC_SVT "LOCAL")
-
-if (NOT MSVC)
-    message(STATUS "MSVC has issues with SV1-AV1, logging will be forcefully enabled")
-    set(LOG_QUIET ON)
-endif()
-
-find_program(NASM_EXECUTABLE nasm)
-set(COMPILE_C_ONLY ON) # NOTE: disabled as it requires extra dependencies that need to be worked out
-
-add_subdirectory(external/libavif)
 
 # LZ4 / libdeflate
 

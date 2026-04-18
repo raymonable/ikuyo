@@ -214,7 +214,6 @@ ResolutionResizeEnd:
             switch (imageContainer) {
                 case PNG: { memcpy(outputFileName + length + 1, "png", 3); break; }
                 case WebP: { memcpy(outputFileName + length + 1, "webp", 4); break; }
-                case AVIF: { memcpy(outputFileName + length + 1, "avif", 4); break; }
                 default: break;
             }
 

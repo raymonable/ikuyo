@@ -10,7 +10,7 @@
 
 enum ImageContainer {
     NoContainer = 0,
-    PNG, WebP, AVIF
+    PNG, WebP
 };
 struct ImageBuffer {
     enum ImageContainer type;
@@ -21,7 +21,6 @@ struct ImageBuffer {
 struct ImageBuffer imageBufferInit(enum ImageContainer, uint8_t* data, size_t size);
 IKUYO_EXPORT void imageBufferFree(struct ImageBuffer);
 
-struct ImageBuffer avifGenerate(struct TextureInformation, int preferredQuality);
 struct ImageBuffer webpGenerate(struct TextureInformation, int preferredQuality);
 struct ImageBuffer pngGenerate(struct TextureInformation); // NOTE: handled by bridge
 
