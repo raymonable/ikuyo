@@ -16,27 +16,39 @@ set(IKUYO_LIBRARIES
 
 include_directories(include external/bcdec external/stb external/libdeflate)
 add_library(ikuyo STATIC
-        src/common/bytestream.c
-        src/common/texture.c
-        src/common/image.c
+    src/common/bytestream.c
+    src/common/texture.c
+    src/common/image.c
 
-        src/format/dds/dds.c
-        src/format/unityfs/assetbundle.c
-        src/format/ue4/uexp.c
+    src/format/dds/dds.c
+    src/format/unityfs/assetbundle.c
+    src/format/ue4/uexp.c
 
-        src/format/aft/farc.c
-        src/format/aft/txp.c
+    src/format/aft/farc.c
+    src/format/aft/txp.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES OUTPUT_NAME "ikuyo-lib")
+
+# Detect architecture
+
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" IKUYO_PROCESSOR)
+if(IKUYO_PROCESSOR MATCHES "^(x86_64|amd64|x64)$")
+    set(IKUYO_ARCHITECTURE "x86_64")
+elseif(IKUYO_PROCESSOR MATCHES "^(aarch64|arm64)$")
+    set(IKUYO_ARCHITECTURE "arm64")
+else()
+    set(IKUYO_ARCHITECTURE "unknown")
+    message(WARNING "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}, only x86_64 and ARM64 are natively supported")
+endif()
 
 # Command-line Interface
 
 add_executable(ikuyo_cli src/interface/cli.c $<TARGET_OBJECTS:ikuyo>)
 target_link_libraries(ikuyo_cli PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo_cli PROPERTIES
-        OUTPUT_NAME "ikuyo"
-        PDB_NAME "ikuyo-cli"
+    OUTPUT_NAME "ikuyo"
+    PDB_NAME "ikuyo-cli"
 )
 
 # Java Native Interface
@@ -51,21 +63,21 @@ if (IKUYO_JNI)
         target_include_directories(ikuyo_jni PRIVATE ${JNI_INCLUDE_DIRS})
         target_link_libraries(ikuyo_jni PRIVATE ${IKUYO_LIBRARIES} JNI::JNI)
         set_target_properties(ikuyo_jni PROPERTIES
-                OUTPUT_NAME "ikuyo-jni"
-                PDB_NAME "ikuyo-jni"
+            OUTPUT_NAME "ikuyo-jni-${IKUYO_ARCHITECTURE}"
+            PDB_NAME "ikuyo-jni"
+        )
+        add_custom_command(
+            TARGET ikuyo_jni
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:ikuyo_jni>
+            "${CMAKE_SOURCE_DIR}/jni/src/main/resources"
+            COMMENT "Copying Ikuyo JNI library"
+            VERBATIM
         )
     else()
         message(WARNING "JDK not found, not building Ikuyo JNI")
     endif()
-endif()
-
-# WebAssembly configuration
-
-if (EMSCRIPTEN)
-    # TODO: put some work into this, flesh out bindings for wasm
-    set_target_properties(ikuyo PROPERTIES LINK_FLAGS
-            "-Os -s WASM=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=1MB -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORTED_FUNCTIONS=_free,_malloc,_main"
-    )
 endif()
 
 # libavif / libwebp
@@ -95,7 +107,7 @@ if (NOT MSVC)
 endif()
 
 find_program(NASM_EXECUTABLE nasm)
-set(COMPILE_C_ONLY ON) # Disable if you have nasm installed and would like additional optimizations
+set(COMPILE_C_ONLY ON) # NOTE: disabled as it requires extra dependencies that need to be worked out
 
 add_subdirectory(external/libavif)
 
@@ -105,15 +117,20 @@ set(LIBDEFLATE_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
 set(LIBDEFLATE_BUILD_SHARED_LIB OFF CACHE BOOL "" FORCE)
 set(LIBDEFLATE_USE_SHARED_LIB OFF CACHE BOOL "" FORCE)
 set(LIBDEFLATE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(LIBDEFLATE_COMPRESSION_SUPPORT OFF CACHE BOOL "" FORCE)
+set(LIBDEFLATE_BUILD_GZIP OFF CACHE BOOL "" FORCE) # NOTE: this disables the building of the `libdeflate-gzip`, it does NOT remove GZip support
+
+set(LZ4_BUILD_CLI OFF CACHE BOOL "" FORCE)
+set(LZ4_BUILD_LEGACY_LZ4C OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(external/lz4/build/cmake)
 add_subdirectory(external/libdeflate)
 
-# Bridge
+# Bridge (for fpng)
 
 add_library(ikuyo_bridge STATIC
-        src/common/bridge/bridge.cpp
-        external/fpng/src/fpng.cpp
+    src/common/bridge/bridge.cpp
+    external/fpng/src/fpng.cpp
 )
 set_target_properties(ikuyo_bridge PROPERTIES LANGUAGE CXX)
 target_include_directories(ikuyo_bridge PUBLIC include external/fpng/src)

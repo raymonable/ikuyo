@@ -170,13 +170,13 @@ int main(int argc, char** argv) {
             if (resolutionDivision >= strlen(flags[7].value) || !resolutionDivision) goto ResolutionResizeEnd;
             resolutionString[resolutionDivision] = 0;
 
+            // TODO: add proper checking that these inputs are, indeed, valid
             int w = (int)strtol(resolutionString, NULL, 10);
             int h = (int)strtol(resolutionString + resolutionDivision + 1, NULL, 10);
             if (w <= 0 && h <= 0) goto ResolutionResizeEnd;
 
             struct TextureInformation* informationPtr = array.data + index;
 
-            // TODO: fix lol
             if (w <= 0) w = (int)(((float)informationPtr->width / (float)informationPtr->height) * (float)h);
             if (h <= 0) h = (int)(((float)informationPtr->height / (float)informationPtr->width) * (float)w);
 
