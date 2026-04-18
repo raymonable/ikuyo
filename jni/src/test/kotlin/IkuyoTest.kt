@@ -25,6 +25,6 @@ fun main(args: Array<String>) {
     val ikuyo = Ikuyo();
 
     // BEGIN: test
-    run(ikuyo, "test.dds")
-    run(ikuyo, "test.bin")
+    run(ikuyo, "test.dds") // DirectDraw Surface
+    run(ikuyo, "test.txp") // TXP (Project DIVA Arcade Future Tone)
 }

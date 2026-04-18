@@ -16,7 +16,13 @@ class IkuyoProcess {
 
 class Ikuyo {
     init {
-        val libraryName = System.mapLibraryName("ikuyo-jni");
+        val libraryName = System.mapLibraryName("ikuyo-jni-${
+            when (System.getProperty("os.arch").lowercase()) {
+                "x86_64", "amd64" -> "x86_64"
+                "aarch64", "arm64" -> "arm64"
+                else -> "unknown"
+            }
+        }");
         val library = kotlin.io.path.createTempFile(
             libraryName.split('.').last()
         ).toFile();

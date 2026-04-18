@@ -1,14 +1,14 @@
-# ikuyo ・ いくよ
+# Ikuyo ・ いくよ
 
 Ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games and their engines
 
-![kitaura](https://media1.tenor.com/m/6haixoTOSwcAAAAC/bocchi-bocchi-the-rock.gif)
-
-## Supported Formats
+<img src="https://media1.tenor.com/m/6haixoTOSwcAAAAC/bocchi-bocchi-the-rock.gif" height="200">
 
 > [!WARNING]
 > Ikuyo is a rapidly expanding and changing library; more formats are planned to be supported and ABI is constantly changing.<br>
 > Please wait for a Version 1.0.0 release before deploying into any production libraries or services.
+
+## Supported Formats
 
 ### Input
 
@@ -27,7 +27,7 @@ Ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games 
 > Windows users will need to install the [Visual Studio C++ Redistributable](https://aka.ms/vc14/vc_redist.x64.exe) to run the pre-built binaries.
 
 Binaries can be found in the [releases tab](https://github.com/raymonable/ikuyo/releases/latest) for Windows and Linux.<br>
-macOS users may need to use a solution such as [Wine](https://winehq.org) (preferred) or [Karton](https://karton.github.io) (untested).
+macOS users may need to use a solution such as [Wine](https://winehq.org) (preferred) or build it manually.
 
 The command-line interface currently has the following arguments:
 ```
