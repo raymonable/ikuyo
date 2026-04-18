@@ -19,6 +19,12 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+
+      - name: Install JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "microsoft"
+          java-version: 21
       
       - name: Pull Latest MSVC
         uses: TheMrMilchmann/setup-msvc-dev@v4
@@ -47,6 +53,12 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+
+      - name: Install JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "microsoft"
+          java-version: 21
 
       - name: Install GCC
         run: |
