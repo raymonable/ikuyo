@@ -26,8 +26,7 @@ Ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games 
 > [!IMPORTANT]
 > Windows users will need to install the [Visual Studio C++ Redistributable](https://aka.ms/vc14/vc_redist.x64.exe) to run the pre-built binaries.
 
-Binaries can be found in the [releases tab](https://github.com/raymonable/ikuyo/releases/latest) for Windows and Linux.<br>
-macOS users may need to use a solution such as [Wine](https://winehq.org) (preferred) or build it manually.
+Binaries can be found in the [releases tab](https://github.com/raymonable/ikuyo/releases/latest) for all major platforms.<br>
 
 The command-line interface currently has the following arguments:
 ```
@@ -55,6 +54,14 @@ CMake and gcc are required to build ikuyo. Package manager one-liners are provid
 
 ```bash
 cmake -S . -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
+cmake --build build 
+```
+
+### macOS
+
+You will need XCode and CMake. It will compile for both x86_64 and arm64 by default.
+```
+cmake -S . -B build -DCMAKE_SYSTEM_NAME=Dawrin -DCMAKE_BUILD_TYPE=Release
 cmake --build build 
 ```
 
