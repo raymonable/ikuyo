@@ -9,7 +9,8 @@
 #include <common/texture.h>
 
 struct UnityAssetCollectionAsset {
-
+    uint32_t offset;
+    size_t size;
 };
 struct UnityAssetCollection {
     struct UnityAssetCollectionAsset* entries;

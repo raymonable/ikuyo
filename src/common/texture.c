@@ -23,9 +23,12 @@
 
 void textureLoadImplementationsInit(struct TextureLoaderImplementations* implementations) {
     ddsRegister(implementations);
+
     txpRegister(implementations);
     farcRegister(implementations);
-    assetBundleRegister(implementations);
+
+    unityAssetBundleRegister(implementations);
+
     uexpRegister(implementations); // NOTE: this MUST be placed at the end, the detection is ass
 }
 

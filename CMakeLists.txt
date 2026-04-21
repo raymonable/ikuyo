@@ -40,7 +40,7 @@ endif()
 
 message(STATUS "Detected architecture as ${IKUYO_ARCHITECTURE}")
 
-set(IKUYO_LIBRARIES webp lz4 libdeflate_static ikuyo_bridge)
+set(IKUYO_LIBRARIES webp lz4 libdeflate_static 7zip ikuyo_bridge)
 
 include_directories(include external/bcdec external/stb external/libdeflate)
 add_library(ikuyo STATIC
@@ -49,12 +49,14 @@ add_library(ikuyo STATIC
     src/common/image.c
 
     src/format/dds/dds.c
+
     src/format/unityfs/assetbundle.c
+    src/format/unityfs/cab.c
+
     src/format/ue4/uexp.c
 
     src/format/aft/farc.c
     src/format/aft/txp.c
-        src/format/unityfs/cab.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES OUTPUT_NAME "ikuyo-lib")
@@ -71,6 +73,8 @@ set_target_properties(ikuyo_cli PROPERTIES
 # Java Native Interface
 
 option(IKUYO_JNI "Enable building of Ikuyo's JNI interface" ON)
+option(IKUYO_JNI_COPY "Copy the JNI library to the Kotlin resources directory after build" ON)
+
 if (IKUYO_JNI)
     set(JAVA_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
     set(JAVA_AWT_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
@@ -83,15 +87,17 @@ if (IKUYO_JNI)
             OUTPUT_NAME "ikuyo-jni-${IKUYO_ARCHITECTURE}"
             PDB_NAME "ikuyo-jni"
         )
-        add_custom_command(
-            TARGET ikuyo_jni
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            $<TARGET_FILE:ikuyo_jni>
-            "${CMAKE_SOURCE_DIR}/jni/src/main/resources"
-            COMMENT "Copying Ikuyo JNI library"
-            VERBATIM
-        )
+        if (IKUYO_JNI_COPY)
+            add_custom_command(
+                TARGET ikuyo_jni
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:ikuyo_jni>
+                "${CMAKE_SOURCE_DIR}/jni/src/main/resources"
+                COMMENT "Copying Ikuyo JNI library"
+                VERBATIM
+            )
+        endif()
     else()
         message(WARNING "JDK not found, not building Ikuyo JNI")
     endif()
@@ -128,6 +134,12 @@ set(LZ4_BUILD_LEGACY_LZ4C OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(external/lz4/build/cmake)
 add_subdirectory(external/libdeflate)
+
+# LZMA (7-zip)
+
+file(GLOB 7ZIP_SOURCES external/7zip/C/*.c)
+add_library(7zip ${7ZIP_SOURCES})
+target_include_directories(7zip PUBLIC external/7zip/C)
 
 # Bridge (for fpng)
 

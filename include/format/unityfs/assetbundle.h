@@ -26,6 +26,8 @@ struct UnityAssetBundle {
 
     uint8_t* decompressedData;
     size_t decompressedDataSize;
+    uint8_t* decompressedBlockInfo;
+    size_t decompressedBlockInfoSize;
 
     struct UnityAssetBundleEntry* entries;
     size_t entriesCount;

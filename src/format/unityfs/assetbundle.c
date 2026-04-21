@@ -7,12 +7,42 @@
 #include <common/bytestream.h>
 
 #include <lz4.h> // NOTE: lz4hc appears to be included in here for decompression
+#include <LzmaDec.h>
+
+#include "format/unityfs/cab.h"
+
+static void *SzAlloc(ISzAllocPtr ptr, size_t size) { return malloc(size); }
+static void SzFree(ISzAllocPtr ptr, void *address) { free(address); }
+static ISzAlloc g_Alloc = { SzAlloc, SzFree };
 
 bool unityAssetBundleDecompress(enum UnityAssetBundleCompression type, uint8_t* input, size_t inputSize, uint8_t* output, size_t outputSize) {
     switch (type) {
         case UnityAssetBundleNoCompression:
             memcpy(output, input, inputSize); break;
-         // TODO: LZMA
+        case UnityAssetBundleLZMA: {
+            CLzmaDec state;
+            LzmaDec_Construct(&state);
+
+            SRes alloc_res = LzmaDec_Allocate(&state, input, LZMA_PROPS_SIZE, &g_Alloc);
+            if (alloc_res != SZ_OK) return false;
+
+            LzmaDec_Init(&state);
+
+            SizeT dest_len = outputSize;
+            SizeT src_len = inputSize - 5;
+
+            ELzmaStatus status = LZMA_STATUS_NOT_SPECIFIED;
+            SRes response = LzmaDec_DecodeToBuf(
+                &state,
+                output, &dest_len,
+                input + 5, &src_len,
+                LZMA_FINISH_END, &status
+            );
+
+            LzmaDec_Free(&state, &g_Alloc);
+            if (response != SZ_OK) return false;
+            break;
+        }
         case UnityAssetBundleLZ4HC:
         case UnityAssetBundleLZ4:
             return LZ4_decompress_safe(
@@ -26,7 +56,6 @@ bool unityAssetBundleDecompress(enum UnityAssetBundleCompression type, uint8_t* 
 
 struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size) {
     struct UnityAssetBundle assetBundle = {0};
-    uint8_t* decompressedBlockInfo = NULL;
 
     if (strcmp((const char*)buffer, "UnityFS\0") != 0)
         goto AssetBundleLoadFailure;
@@ -40,7 +69,7 @@ struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size) {
 
     bytestreamReadLongLong(&bytestream, true);
     uint32_t compressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
-    uint32_t decompressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
+    assetBundle.decompressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
     uint32_t flags = bytestreamReadLong(&bytestream, true);
 
     // BEGIN: read block info
@@ -51,15 +80,15 @@ struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size) {
         bytestream.offset += compressedBlockInfoSize;
     }
 
-    decompressedBlockInfo = malloc(decompressedBlockInfoSize);
-    memset(decompressedBlockInfo, 0, decompressedBlockInfoSize);
+    assetBundle.decompressedBlockInfo = malloc(assetBundle.decompressedBlockInfoSize);
+    memset(assetBundle.decompressedBlockInfo, 0, assetBundle.decompressedBlockInfoSize);
     if (!unityAssetBundleDecompress(
         flags & 0x3F,
         compressedBlockInfo, compressedBlockInfoSize,
-        decompressedBlockInfo, decompressedBlockInfoSize
+        assetBundle.decompressedBlockInfo, assetBundle.decompressedBlockInfoSize
     )) goto AssetBundleLoadFailure;
 
-    struct Bytestream blockInfoBytestream = bytestreamInit(decompressedBlockInfo);
+    struct Bytestream blockInfoBytestream = bytestreamInit(assetBundle.decompressedBlockInfo);
     blockInfoBytestream.offset += 16;
 
     // BEGIN: decompress block contents
@@ -113,7 +142,7 @@ struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size) {
         }
     }
 
-    // NOTE: most AssetBundles keep the assets in the cab but not always
+    // NOTE: some AssetBundles keep the assets in the cab but not always
     if (!assetBundle.assetArchiveEntry && assetBundle.cabArchiveEntry != NULL)
         assetBundle.assetArchiveEntry = assetBundle.cabArchiveEntry;
 
@@ -122,15 +151,19 @@ AssetBundleLoadFailure:
     unityAssetBundleFree(&assetBundle);
     memset(&assetBundle, 0, sizeof(struct UnityAssetBundle));
 AssetBundleLoadSuccess:
-    if (decompressedBlockInfo != NULL) free(decompressedBlockInfo);
     return assetBundle;
 }
 
 void unityAssetBundleFree(struct UnityAssetBundle* assetBundle) {
     if (assetBundle->decompressedData != NULL)
         free(assetBundle->decompressedData);
+
+    if (assetBundle->decompressedBlockInfo != NULL)
+        free(assetBundle->decompressedBlockInfo);
+
     if (assetBundle->entries != NULL)
         free(assetBundle->entries);
+
     assetBundle->decompressedData = NULL;
     assetBundle->entries = NULL;
     assetBundle->entriesCount = 0;
@@ -138,7 +171,7 @@ void unityAssetBundleFree(struct UnityAssetBundle* assetBundle) {
 
 struct TextureArray unityAssetBundleParse(uint8_t* buffer, size_t size) {
     struct UnityAssetBundle assetBundle = unityAssetBundleLoad(buffer, size);
-
+    struct UnityAssetCollection assetCollection = unityAssetCollectionLoad(assetBundle.cabArchiveEntry->data, assetBundle.cabArchiveEntry->size);
     return (struct TextureArray){0};
 }
 
