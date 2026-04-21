@@ -1,4 +1,21 @@
 cmake_minimum_required(VERSION 3.14)
+
+# Detect architecture
+
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" IKUYO_PROCESSOR)
+if(APPLE)
+    set(IKUYO_ARCHITECTURE "universal")
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+    message(STATUS "Compiling for macOS, only a single binary is built")
+elseif(IKUYO_PROCESSOR MATCHES "^(x86_64|amd64|x64)$")
+    set(IKUYO_ARCHITECTURE "x86_64")
+elseif(IKUYO_PROCESSOR MATCHES "^(aarch64|arm64)$")
+    set(IKUYO_ARCHITECTURE "arm64")
+else()
+    set(IKUYO_ARCHITECTURE "unknown")
+    message(WARNING "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}, only x86_64 and ARM64 are natively supported")
+endif()
+
 project(ikuyo C CXX)
 
 set(CMAKE_C_STANDARD 11)
@@ -25,18 +42,6 @@ add_library(ikuyo STATIC
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES OUTPUT_NAME "ikuyo-lib")
-
-# Detect architecture
-
-string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" IKUYO_PROCESSOR)
-if(IKUYO_PROCESSOR MATCHES "^(x86_64|amd64|x64)$")
-    set(IKUYO_ARCHITECTURE "x86_64")
-elseif(IKUYO_PROCESSOR MATCHES "^(aarch64|arm64)$")
-    set(IKUYO_ARCHITECTURE "arm64")
-else()
-    set(IKUYO_ARCHITECTURE "unknown")
-    message(WARNING "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}, only x86_64 and ARM64 are natively supported")
-endif()
 
 # Command-line Interface
 

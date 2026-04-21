@@ -58,6 +58,22 @@ cmake -S . -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUIL
 cmake --build build 
 ```
 
+## Future Goals & Tasks
+
+### Tasks
+
+ - Finish the UnityFS implementations
+ - Improve API to only sometimes decode textures (intended for parsing large UnityFS bundles, maybe)
+ - Improve Kotlin interface and provide better examples
+ - Read the sprite information in TXP to separate the jacket from the background in some circumstances
+ - Reduce memory leaks (and eventually make Ikuyo entirely memory-safe!)
+
+### Goals
+
+ - GPU decoding on supported targets and formats (such as CLI & BCx?)
+ - Include raw binary formats for exporting images
+ - Improve ABI and overall stability between versions (post-1.0.0 goal)
+
 ## Acknowledgements
 
 - All external libraries (excluding AVIF encoders/decoders) are available to view via the [external](./external) directory

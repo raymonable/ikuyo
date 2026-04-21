@@ -7,7 +7,7 @@ fun run(ikuyo: Ikuyo, filename: String) {
         ?: error("failed to read texture")
 
     val imageBuffers = ikuyo.process(texture, IkuyoProcess().apply {
-        formatOutput = IkuyoImageContainer.AVIF
+        formatOutput = IkuyoImageContainer.PNG
         width = 1000
         preferredImageIndex = 0
     })
@@ -16,7 +16,7 @@ fun run(ikuyo: Ikuyo, filename: String) {
         if (buffer != null) {
             val bytes = ByteArray(buffer.remaining())
             buffer.get(bytes)
-            File("${filename}.avif").writeBytes(bytes)
+            File("${filename}.png").writeBytes(bytes)
         }
     } else error("failed to process texture");
 }

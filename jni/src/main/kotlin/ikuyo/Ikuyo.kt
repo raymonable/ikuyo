@@ -14,14 +14,19 @@ class IkuyoProcess {
     var preferredQuality: Int = 75;
 }
 
+fun isMacOS(): Boolean {
+    val osName = System.getProperty("os.name").lowercase()
+    return osName.contains("mac") || osName.contains("darwin")
+}
+
 class Ikuyo {
     init {
         val libraryName = System.mapLibraryName("ikuyo-jni-${
-            when (System.getProperty("os.arch").lowercase()) {
+            if (!isMacOS()) when (System.getProperty("os.arch").lowercase()) {
                 "x86_64", "amd64" -> "x86_64"
                 "aarch64", "arm64" -> "arm64"
                 else -> "unknown"
-            }
+            } else "universal"
         }");
         val library = kotlin.io.path.createTempFile(
             libraryName.split('.').last()
