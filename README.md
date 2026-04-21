@@ -19,7 +19,6 @@ Ikuyo is a texture decoder for several rhythm arcade (or arcade-adjacent) games 
 
 - PNG (via fpng), fast but worse compression
 - WebP (via libwebp), slow but better compression
-- AVIF (via libavif/SV1-AV1), slowest but best compression
 
 ## Usage
 
