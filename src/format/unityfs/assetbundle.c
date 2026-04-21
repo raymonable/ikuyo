@@ -8,13 +8,13 @@
 
 #include <lz4.h> // NOTE: lz4hc appears to be included in here for decompression
 
-bool assetBundleDecompress(enum AssetBundleCompression type, uint8_t* input, size_t inputSize, uint8_t* output, size_t outputSize) {
+bool unityAssetBundleDecompress(enum UnityAssetBundleCompression type, uint8_t* input, size_t inputSize, uint8_t* output, size_t outputSize) {
     switch (type) {
-        case AssetBundleNoCompression:
+        case UnityAssetBundleNoCompression:
             memcpy(output, input, inputSize); break;
          // TODO: LZMA
-        case AssetBundleLZ4HC:
-        case AssetBundleLZ4:
+        case UnityAssetBundleLZ4HC:
+        case UnityAssetBundleLZ4:
             return LZ4_decompress_safe(
                 (char*)input, (char*)output,
                 inputSize, outputSize
@@ -24,8 +24,9 @@ bool assetBundleDecompress(enum AssetBundleCompression type, uint8_t* input, siz
     return true;
 }
 
-struct AssetBundle assetBundleParse(uint8_t* buffer) {
-    struct AssetBundle assetBundle = {0};
+struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size) {
+    struct UnityAssetBundle assetBundle = {0};
+    uint8_t* decompressedBlockInfo = NULL;
 
     if (strcmp((const char*)buffer, "UnityFS\0") != 0)
         goto AssetBundleLoadFailure;
@@ -37,7 +38,7 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
     assetBundle.majorVersion = bytestreamReadString(&bytestream);
     assetBundle.revisionVersion = bytestreamReadString(&bytestream);
 
-    uint64_t size = bytestreamReadLongLong(&bytestream, true);
+    bytestreamReadLongLong(&bytestream, true);
     uint32_t compressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
     uint32_t decompressedBlockInfoSize = bytestreamReadLong(&bytestream, true);
     uint32_t flags = bytestreamReadLong(&bytestream, true);
@@ -50,9 +51,9 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
         bytestream.offset += compressedBlockInfoSize;
     }
 
-    uint8_t* decompressedBlockInfo = malloc(decompressedBlockInfoSize);
+    decompressedBlockInfo = malloc(decompressedBlockInfoSize);
     memset(decompressedBlockInfo, 0, decompressedBlockInfoSize);
-    if (!assetBundleDecompress(
+    if (!unityAssetBundleDecompress(
         flags & 0x3F,
         compressedBlockInfo, compressedBlockInfoSize,
         decompressedBlockInfo, decompressedBlockInfoSize
@@ -75,7 +76,7 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
         } else
             goto AssetBundleLoadFailure;
 
-        if (!assetBundleDecompress(
+        if (!unityAssetBundleDecompress(
             blockFlags & 0x3F,
             bytestreamReadPointer(&bytestream), blockCompressedSize,
             assetBundle.decompressedData + assetBundle.decompressedDataSize - blockDecompressedSize,
@@ -90,9 +91,63 @@ struct AssetBundle assetBundleParse(uint8_t* buffer) {
         uint64_t nodeSize = bytestreamReadLongLong(&blockInfoBytestream, true);
         uint32_t nodeFlags = bytestreamReadLong(&blockInfoBytestream, true);
         const char* nodePath = bytestreamReadString(&blockInfoBytestream);
+
+        // NOTE: is this even correct
+        assetBundle.entriesCount++;
+        if (assetBundle.entries != NULL) {
+            struct UnityAssetBundleEntry* ptr = realloc(assetBundle.entries, assetBundle.entriesCount * sizeof(struct UnityAssetBundleEntry));
+            if (!ptr) goto AssetBundleLoadFailure;
+            assetBundle.entries = ptr;
+        } else
+            assetBundle.entries = malloc(assetBundle.entriesCount * sizeof(struct UnityAssetBundleEntry));
+        struct UnityAssetBundleEntry* entry = assetBundle.entries + assetBundle.entriesCount - 1;
+        memset(entry, 0, sizeof(struct UnityAssetBundleEntry));
+        entry->name = nodePath;
+        entry->data = assetBundle.decompressedData + nodeOffset;
+        entry->size = nodeSize;
+
+        switch (nodeFlags) {
+            case 0: assetBundle.assetArchiveEntry = entry; break;
+            case 4: assetBundle.cabArchiveEntry = entry; break;
+            default: break;
+        }
     }
 
-    return assetBundle;
+    // NOTE: most AssetBundles keep the assets in the cab but not always
+    if (!assetBundle.assetArchiveEntry && assetBundle.cabArchiveEntry != NULL)
+        assetBundle.assetArchiveEntry = assetBundle.cabArchiveEntry;
+
+    goto AssetBundleLoadSuccess;
 AssetBundleLoadFailure:
-    return (struct AssetBundle){0};
+    unityAssetBundleFree(&assetBundle);
+    memset(&assetBundle, 0, sizeof(struct UnityAssetBundle));
+AssetBundleLoadSuccess:
+    if (decompressedBlockInfo != NULL) free(decompressedBlockInfo);
+    return assetBundle;
+}
+
+void unityAssetBundleFree(struct UnityAssetBundle* assetBundle) {
+    if (assetBundle->decompressedData != NULL)
+        free(assetBundle->decompressedData);
+    if (assetBundle->entries != NULL)
+        free(assetBundle->entries);
+    assetBundle->decompressedData = NULL;
+    assetBundle->entries = NULL;
+    assetBundle->entriesCount = 0;
+}
+
+struct TextureArray unityAssetBundleParse(uint8_t* buffer, size_t size) {
+    struct UnityAssetBundle assetBundle = unityAssetBundleLoad(buffer, size);
+
+    return (struct TextureArray){0};
+}
+
+void unityAssetBundleRegister(struct TextureLoaderImplementations* implementations) {
+    struct TextureLoaderImplementation implementation = {0};
+    implementation.name = "ab";
+    implementation.description = "Unity AssetBundle";
+    implementation.container = UnityAssetBundle;
+    implementation.load = &unityAssetBundleParse;
+    implementation.detect = NULL;
+    textureLoadImplementationAdd(implementations, implementation);
 }

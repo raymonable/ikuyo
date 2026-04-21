@@ -41,6 +41,7 @@ add_library(ikuyo STATIC
 
     src/format/aft/farc.c
     src/format/aft/txp.c
+        src/format/unityfs/cab.c
 )
 target_link_libraries(ikuyo PUBLIC ${IKUYO_LIBRARIES})
 set_target_properties(ikuyo PROPERTIES OUTPUT_NAME "ikuyo-lib")

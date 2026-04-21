@@ -8,21 +8,35 @@
 #include <ikuyo.h>
 #include <common/texture.h>
 
-enum AssetBundleCompression {
-    AssetBundleNoCompression,
-    AssetBundleLZMA,
-    AssetBundleLZ4,
-    AssetBundleLZ4HC
+enum UnityAssetBundleCompression {
+    UnityAssetBundleNoCompression,
+    UnityAssetBundleLZMA,
+    UnityAssetBundleLZ4,
+    UnityAssetBundleLZ4HC
 };
-struct AssetBundle {
+struct UnityAssetBundleEntry {
+    const char* name;
+    uint8_t* data;
+    size_t size;
+};
+struct UnityAssetBundle {
     uint32_t version;
     char* majorVersion;
     char* revisionVersion;
 
     uint8_t* decompressedData;
     size_t decompressedDataSize;
+
+    struct UnityAssetBundleEntry* entries;
+    size_t entriesCount;
+
+    struct UnityAssetBundleEntry* cabArchiveEntry;
+    struct UnityAssetBundleEntry* assetArchiveEntry; // Often kept the same as CAB.
 };
 
-struct AssetBundle assetBundleParse(uint8_t* buffer);
+void unityAssetBundleFree(struct UnityAssetBundle*);
+
+struct UnityAssetBundle unityAssetBundleLoad(uint8_t* buffer, size_t size);
+void unityAssetBundleRegister(struct TextureLoaderImplementations* implementations);
 
 #endif //IKUYO_UNITY_H
