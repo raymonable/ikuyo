@@ -51,7 +51,6 @@ struct TextureArray ddsLoad(uint8_t* buffer, size_t size) {
 
     struct TextureArray array = {0};
     textureArrayAdd(&array, &information);
-
     return array;
 DdsLoadFailure:
     return (struct TextureArray){0};

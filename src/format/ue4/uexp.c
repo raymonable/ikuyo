@@ -42,9 +42,7 @@ struct TextureArray uexpLoad(uint8_t* buffer, size_t size) {
 
     struct TextureArray array = {0};
     textureArrayAdd(&array, &information);
-
     return array;
-
 Ue4LoadFailure:
     return (struct TextureArray){0};
 }

@@ -53,12 +53,12 @@ bool farcDetect(uint8_t* buffer, size_t size) {
 
 struct TextureArray farcLoad(uint8_t* buffer, size_t size) {
     struct TextureArray array = {0};
-
     size_t farcSize = 0;
+
     uint8_t* farc = farcAccess(buffer, &farcSize);
     if (!farc) goto FarcLoadFailure;
-
     array = txpLoad(farc, farcSize);
+
 FarcLoadFailure:
     free(farc);
     return array;

@@ -59,6 +59,9 @@ bool txpDetect(uint8_t* buffer, size_t size) {
 struct TextureArray txpLoad(uint8_t* buffer, size_t size) {
     struct Bytestream bytestream = bytestreamInit(buffer);
 
+    struct TextureInformation primaryTextureInformation = {0};
+    struct TextureInformation secondaryTextureInformation = {0};
+
     // BEGIN: verify contents, both cleaned txp and extracted are supported
     uint8_t* bufferOffset = buffer;
     if (bytestreamReadLong(&bytestream, true) != TXP_MAGIC + TxpMagicTextureAtlas) {
@@ -91,62 +94,64 @@ struct TextureArray txpLoad(uint8_t* buffer, size_t size) {
         uint32_t mipCount = bytestreamReadLong(&textureBytestream, false);
         bytestreamReadLong(&textureBytestream, false);
 
-        struct TextureInformation textureInformation = txpGetTextureInformationFromMip(
+        primaryTextureInformation = txpGetTextureInformationFromMip(
             bufferTextureOffset + bytestreamReadLong(&textureBytestream, false)
         );
-        if (textureInformation.format == ATI2 && mipCount > 1) {
+        if (primaryTextureInformation.format == ATI2 && mipCount > 1) {
             // NOTE: the texture is AY/UV, 2 buffer image
-            struct TextureInformation alternateTextureInformation = txpGetTextureInformationFromMip(
+            secondaryTextureInformation = txpGetTextureInformationFromMip(
                 bufferTextureOffset + bytestreamReadLong(&textureBytestream, false)
             );
-            if (textureInformation.buffer != NULL && alternateTextureInformation.buffer != NULL) {
+            if (primaryTextureInformation.buffer != NULL && secondaryTextureInformation.buffer != NULL) {
                 // NOTE: the BC6 (ATI2) has to be decoded before we can process it
-                textureDecode(&textureInformation);
-                textureDecode(&alternateTextureInformation);
+                textureDecode(&primaryTextureInformation);
+                textureDecode(&secondaryTextureInformation);
 
-                uint8_t* rgba = malloc(textureGetSize(&textureInformation));
+                uint8_t* rgba = malloc(textureGetSize(&primaryTextureInformation));
 
                 // BEGIN: convert from separate AY / UV channels into a single RGBA
-                for (uint32_t y = 0; y < textureInformation.height; y++) {
-                    for (uint32_t x = 0; x < textureInformation.width; x++) {
-                        uint32_t offsetUV = ((y / 2) * alternateTextureInformation.width + (x / 2)) * 4;
-                        uint32_t offsetAY = (y * textureInformation.width + x) * 4;
+                for (uint32_t y = 0; y < primaryTextureInformation.height; y++) {
+                    for (uint32_t x = 0; x < primaryTextureInformation.width; x++) {
+                        uint32_t offsetUV = ((y / 2) * secondaryTextureInformation.width + (x / 2)) * 4;
+                        uint32_t offsetAY = (y * primaryTextureInformation.width + x) * 4;
                         uint8_t* dst = rgba + offsetAY;
 
-                        const float cy = textureInformation.buffer[offsetAY + 0];
-                        const float cb = alternateTextureInformation.buffer[offsetUV + 0] - 128;
-                        const float cr = alternateTextureInformation.buffer[offsetUV + 1] - 128;
+                        const float cy = primaryTextureInformation.buffer[offsetAY + 0];
+                        const float cb = secondaryTextureInformation.buffer[offsetUV + 0] - 128;
+                        const float cr = secondaryTextureInformation.buffer[offsetUV + 1] - 128;
 
                         dst[0] = (uint8_t)(clamp(cy + (cr * 1.403f)));
                         dst[1] = (uint8_t)(clamp(cy - (cb * 0.344f) - (cr * 0.714f)));
                         dst[2] = (uint8_t)(clamp(cy + (cb * 1.770f)));
-                        dst[3] = textureInformation.buffer[offsetAY + 1];
+                        dst[3] = primaryTextureInformation.buffer[offsetAY + 1];
                     }
                 }
 
                 struct TextureInformation information = {0};
                 information.format = RGBA;
-                information.width = textureInformation.width;
-                information.height = textureInformation.height;
+                information.width = secondaryTextureInformation.width;
+                information.height = secondaryTextureInformation.height;
                 information.buffer = rgba;
                 information.allocated = true;
 
                 textureArrayAdd(&array, &information);
 
-                textureFree(&textureInformation);
-                textureFree(&alternateTextureInformation);
+                textureFree(&primaryTextureInformation);
+                textureFree(&secondaryTextureInformation);
             } else
                 goto TxpLoadFailure;
         } else {
             // NOTE: typical texture
-            if (!textureInformation.buffer) goto TxpLoadFailure;
-            textureDecode(&textureInformation);
-            textureArrayAdd(&array, &textureInformation);
+            if (!primaryTextureInformation.buffer) goto TxpLoadFailure;
+            textureDecode(&primaryTextureInformation);
+            textureArrayAdd(&array, &primaryTextureInformation);
         }
     }
 
-    return array;
+    textureFree(&primaryTextureInformation);
+    textureFree(&secondaryTextureInformation);
 
+    return array;
 TxpLoadFailure:
     return (struct TextureArray){0};
 };

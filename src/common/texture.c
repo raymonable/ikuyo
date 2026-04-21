@@ -25,6 +25,7 @@ void textureLoadImplementationsInit(struct TextureLoaderImplementations* impleme
     ddsRegister(implementations);
     txpRegister(implementations);
     farcRegister(implementations);
+    assetBundleRegister(implementations);
     uexpRegister(implementations); // NOTE: this MUST be placed at the end, the detection is ass
 }
 
