@@ -83,6 +83,38 @@ jobs:
           name: 'ikuyo-linux-${{ env.IKUYO_ARCHITECTURE_NAME }}'
           path: './ikuyo-linux'
 
+  build-macos:
+    runs-on: macos-latest
+    env:
+      IKUYO_ARCHITECTURE_APT: x86-64
+      IKUYO_ARCHITECTURE_GCC: x86_64
+      IKUYO_ARCHITECTURE_NAME: x86_64
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "microsoft"
+          java-version: 21
+      - name: Build with CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_SYSTEM_NAME=Darwin \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          mkdir ikuyo-macos
+          mv bin/* ikuyo-macos
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: 'ikuyo-macos-universal'
+          path: './ikuyo-macos'
+
+
   # Define additional platforms to build for below
 
   build-msvc-arm64:
